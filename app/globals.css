@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #06070b;
+  --surface: #10131c;
+  --surface-2: #161a26;
+  --border: #1d2230;
+  --foreground: #f5f6fa;
+  --muted: #8a93a6;
+
+  --cyan: #34d9e8;
+  --violet: #8b5cf6;
+  --ember: #fb7a3c;
+
+  --gradient-signal: linear-gradient(90deg, var(--cyan) 0%, var(--violet) 52%, var(--ember) 100%);
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-cyan: var(--cyan);
+  --color-violet: var(--violet);
+  --color-ember: var(--ember);
+
+  --font-display: var(--font-vazirmatn);
+  --font-body: var(--font-vazirmatn);
+  --font-mono: var(--font-kode-mono), var(--font-vazirmatn);
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  background: var(--ink);
+  color: var(--foreground);
+}
+
+::selection {
+  background: var(--violet);
+  color: var(--foreground);
+}
+
+/* visible keyboard focus everywhere, on top of any component-level styling */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.text-gradient-signal {
+  background: var(--gradient-signal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
