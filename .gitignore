@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude code tooling (not part of the site)
 /skills/
+
+# static export output
+/out
