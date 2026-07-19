@@ -77,7 +77,7 @@ export function MobileNav({
 
           <div className="px-6 pb-10">
             <a
-              href="#contact"
+              href="/#contact"
               onClick={onClose}
               className="flex h-14 w-full items-center justify-center rounded-full text-base font-semibold text-ink"
               style={{ background: "var(--gradient-signal)" }}

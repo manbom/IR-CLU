@@ -73,3 +73,52 @@ body {
 .font-tabular {
   font-variant-numeric: tabular-nums;
 }
+
+.prose-article {
+  color: var(--muted);
+  line-height: 2;
+  font-size: 17px;
+}
+
+.prose-article > * + * {
+  margin-top: 1.4em;
+}
+
+.prose-article h2 {
+  color: var(--foreground);
+  font-size: 1.4em;
+  font-weight: 700;
+  margin-top: 1.8em;
+}
+
+.prose-article h3 {
+  color: var(--foreground);
+  font-size: 1.15em;
+  font-weight: 700;
+  margin-top: 1.6em;
+}
+
+.prose-article strong {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
+.prose-article a {
+  color: var(--cyan);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--cyan) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+.prose-article ul,
+.prose-article ol {
+  padding-inline-start: 1.4em;
+}
+
+.prose-article li + li {
+  margin-top: 0.5em;
+}
+
+.prose-article li::marker {
+  color: var(--cyan);
+}

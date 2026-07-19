@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import { Container } from "@/components/ui/Container";
@@ -10,10 +11,13 @@ import { useNavState } from "@/lib/nav-state";
 import { useActiveSection } from "@/lib/use-active-section";
 import { MobileNav } from "./MobileNav";
 
-const sectionIds = navItems.map((item) => item.href.replace("#", ""));
+const sectionIds = navItems
+  .filter((item) => item.href.includes("#"))
+  .map((item) => item.href.split("#")[1]);
 
 export function SiteHeader() {
   const { mobileOpen, setMobileOpen } = useNavState();
+  const pathname = usePathname();
   const activeId = useActiveSection(sectionIds);
   const [scrolled, setScrolled] = useState(false);
 
@@ -37,7 +41,7 @@ export function SiteHeader() {
           scrolled ? "h-16" : "h-20"
         }`}
       >
-        <a href="#top" className="flex items-center gap-2.5">
+        <a href="/#top" className="flex items-center gap-2.5">
           <Image src="/logo.png" alt="IR-CLU" width={36} height={36} className="rounded-md" />
           <span className="font-mono text-sm font-medium tracking-wide text-foreground">
             IR-CLU
@@ -46,7 +50,10 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-8 md:flex">
           {navItems.map((item) => {
-            const isActive = activeId === item.href.replace("#", "");
+            const hash = item.href.split("#")[1];
+            const isActive = hash
+              ? activeId === hash
+              : pathname?.startsWith(item.href);
             return (
               <a
                 key={item.href}
@@ -71,7 +78,7 @@ export function SiteHeader() {
 
         <div className="hidden md:block">
           <a
-            href="#contact"
+            href="/#contact"
             className="inline-flex h-10 items-center rounded-full border border-border px-5 text-sm text-foreground transition-colors hover:border-cyan hover:text-cyan"
           >
             شروع پروژه
