@@ -25,12 +25,13 @@ jobs:
         env:
           NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
 
-      - name: Deploy over FTP
+      - name: Deploy over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
           local-dir: ./out/
           server-dir: ./public_html/
           exclude: |
