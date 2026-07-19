@@ -26,31 +26,28 @@
       }
     },
     {
-      "id": "http-claude",
-      "name": "تولید مقاله با Claude",
+      "id": "http-openai",
+      "name": "تولید مقاله با OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [-240, 0],
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "url": "https://api.openai.com/v1/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [
-            { "name": "anthropic-version", "value": "2023-06-01" },
-            { "name": "content-type", "value": "application/json" }
-          ]
+          "parameters": [{ "name": "content-type", "value": "application/json" }]
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  model: \"claude-sonnet-5\",\n  max_tokens: 4000,\n  system: \"تو نویسنده‌ی بلاگ استودیوی اتوماسیون IR-CLU هستی. یک مقاله فارسی، واقعی و غیرکلیشه‌ای درباره موضوع داده‌شده بنویس؛ حدود ۶۰۰ تا ۸۰۰ کلمه، با حداقل دو تیتر H2 (##)، یک مثال ملموس، و یک جمله پایانی که خواننده را به گفت‌وگو درباره پروژه‌اش دعوت کند. لحن: مستقیم، مثل توضیح‌دادن به یک صاحب کسب‌وکار غیرفنی، بدون جمله‌های تکراری تبلیغاتی. خروجی را فقط و فقط به‌صورت یک JSON معتبر با همین ساختار بده و هیچ متن دیگری قبل یا بعدش ننویس: {\\\"title\\\": string, \\\"description\\\": string (زیر ۱۶۰ کاراکتر، برای متا توضیحات سئو), \\\"slug\\\": string (فقط حروف لاتین کوچک و خط‌تیره، بدون فاصله، برگرفته از موضوع اصلی مقاله به انگلیسی), \\\"tags\\\": string[] (۲ تا ۳ تگ فارسی), \\\"body_markdown\\\": string (متن کامل مقاله به‌صورت مارک‌داون، بدون تیتر اصلی H1 چون تیتر جدا نمایش داده می‌شود)}\",\n  messages: [{ role: \"user\", content: $json.topic }]\n}) }}"
+        "jsonBody": "={{ JSON.stringify({\n  model: \"gpt-4o-mini\",\n  response_format: { type: \"json_object\" },\n  messages: [\n    { role: \"system\", content: \"تو نویسنده‌ی بلاگ استودیوی اتوماسیون IR-CLU هستی. یک مقاله فارسی، واقعی و غیرکلیشه‌ای درباره موضوع داده‌شده بنویس؛ حدود ۶۰۰ تا ۸۰۰ کلمه، با حداقل دو تیتر H2 (##)، یک مثال ملموس، و یک جمله پایانی که خواننده را به گفت‌وگو درباره پروژه‌اش دعوت کند. لحن: مستقیم، مثل توضیح‌دادن به یک صاحب کسب‌وکار غیرفنی، بدون جمله‌های تکراری تبلیغاتی. خروجی را فقط و فقط به‌صورت یک JSON معتبر با همین ساختار بده و هیچ متن دیگری قبل یا بعدش ننویس: {\\\"title\\\": string, \\\"description\\\": string (زیر ۱۶۰ کاراکتر، برای متا توضیحات سئو), \\\"slug\\\": string (فقط حروف لاتین کوچک و خط‌تیره، بدون فاصله، برگرفته از موضوع اصلی مقاله به انگلیسی), \\\"tags\\\": string[] (۲ تا ۳ تگ فارسی), \\\"body_markdown\\\": string (متن کامل مقاله به‌صورت مارک‌داون، بدون تیتر اصلی H1 چون تیتر جدا نمایش داده می‌شود)}\" },\n    { role: \"user\", content: $json.topic }\n  ]\n}) }}"
       },
       "credentials": {
         "httpHeaderAuth": {
           "id": "PLACEHOLDER",
-          "name": "Anthropic API Key (x-api-key)"
+          "name": "OpenAI API Key (Authorization: Bearer)"
         }
       }
     },
@@ -61,7 +58,7 @@
       "typeVersion": 2,
       "position": [0, 0],
       "parameters": {
-        "jsCode": "const raw = $input.first().json.content[0].text;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst tagsYaml = article.tags.map((t) => `\"${t}\"`).join(\", \");\n\nconst frontmatter = `---\\ntitle: \"${article.title.replace(/\"/g, '\\\\\"')}\"\\ndescription: \"${article.description.replace(/\"/g, '\\\\\"')}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: article.slug,\n    title: article.title,\n    path: `content/blog/${article.slug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst tagsYaml = article.tags.map((t) => `\"${t}\"`).join(\", \");\n\nconst frontmatter = `---\\ntitle: \"${article.title.replace(/\"/g, '\\\\\"')}\"\\ndescription: \"${article.description.replace(/\"/g, '\\\\\"')}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: article.slug,\n    title: article.title,\n    path: `content/blog/${article.slug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
       }
     },
     {
@@ -112,9 +109,9 @@
       "main": [[{ "node": "انتخاب موضوع", "type": "main", "index": 0 }]]
     },
     "انتخاب موضوع": {
-      "main": [[{ "node": "تولید مقاله با Claude", "type": "main", "index": 0 }]]
+      "main": [[{ "node": "تولید مقاله با OpenAI", "type": "main", "index": 0 }]]
     },
-    "تولید مقاله با Claude": {
+    "تولید مقاله با OpenAI": {
       "main": [[{ "node": "ساخت فایل مارک‌داون", "type": "main", "index": 0 }]]
     },
     "ساخت فایل مارک‌داون": {
