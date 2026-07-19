@@ -3,14 +3,14 @@
   "nodes": [
     {
       "id": "trigger-1",
-      "name": "هر دوشنبه ساعت ۸ صبح",
+      "name": "هر روز ساعت ۸ صبح",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [-720, 0],
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 8 * * 1" }
+            { "field": "cronExpression", "expression": "0 8 * * *" }
           ]
         }
       }
@@ -22,7 +22,7 @@
       "typeVersion": 2,
       "position": [-480, 0],
       "parameters": {
-        "jsCode": "const topics = [\n  \"چطور با n8n یک ورک‌فلوی پاسخ‌گویی خودکار به مشتری بسازیم\",\n  \"تفاوت ربات تلگرام ساده و ربات متصل به دیتابیس واقعی کسب‌وکار\",\n  \"چک‌لیست انتخاب اولین فرآیندی که باید در کسب‌وکار اتوماتیک شود\",\n  \"اتوماسیون قیمت‌گذاری لحظه‌ای برای فروشگاه‌ها و کارخانه‌ها\",\n  \"چطور یک ایجنت هوش مصنوعی می‌تواند محتوای شبکه‌های اجتماعی یک حوزه را رصد کند\",\n  \"چه زمانی اتوماسیون به‌صرفه نیست و بهتر است هنوز دستی انجام شود\",\n  \"چطور ربات تلگرام را به دیتابیس یا اکسل واقعی کسب‌وکار وصل کنیم\"\n];\nconst idx = Math.floor(Math.random() * topics.length);\nreturn [{ json: { topic: topics[idx] } }];"
+        "jsCode": "const topics = [\n  \"چطور با n8n یک ورک‌فلوی پاسخ‌گویی خودکار به مشتری بسازیم\",\n  \"تفاوت ربات تلگرام ساده و ربات متصل به دیتابیس واقعی کسب‌وکار\",\n  \"چک‌لیست انتخاب اولین فرآیندی که باید در کسب‌وکار اتوماتیک شود\",\n  \"اتوماسیون قیمت‌گذاری لحظه‌ای برای فروشگاه‌ها و کارخانه‌ها\",\n  \"چطور یک ایجنت هوش مصنوعی می‌تواند محتوای شبکه‌های اجتماعی یک حوزه را رصد کند\",\n  \"چه زمانی اتوماسیون به‌صرفه نیست و بهتر است هنوز دستی انجام شود\",\n  \"چطور ربات تلگرام را به دیتابیس یا اکسل واقعی کسب‌وکار وصل کنیم\",\n  \"چطور ربات تلگرام فروش را به انبار و موجودی واقعی وصل کنیم تا هیچ‌وقت جنس تمام‌شده نفروشد\",\n  \"تفاوت اتوماسیون ساده (ifttt) و ورک‌فلوی واقعی n8n برای یک کسب‌وکار متوسط\",\n  \"چرا اغلب ربات‌های تلگرامی شکست می‌خورند و چطور از آن‌ها جلوگیری کنیم\",\n  \"چک‌لیست آماده‌سازی داده‌ها قبل از اتوماسیون یک فرآیند\",\n  \"چطور با اتوماسیون، زمان پاسخ به مشتری را از ساعت‌ها به ثانیه برسانیم\",\n  \"اتوماسیون پیگیری سفارش: از تماس تلفنی تا پاسخ آنی ربات\",\n  \"چطور یک ایجنت می‌تواند قیمت رقبا را هر روز خودکار رصد کند\",\n  \"محاسبه بازگشت سرمایه (ROI) یک پروژه اتوماسیون قبل از شروع\",\n  \"چطور ورک‌فلوی n8n را طوری بسازیم که وقتی یک سرویس قطع شد، کل زنجیره خراب نشود\",\n  \"تفاوت ربات پشتیبانی و ربات فروش: کدام را اول بسازیم\",\n  \"اتوماسیون جمع‌آوری لید از چند شبکه اجتماعی در یک داشبورد ساده\",\n  \"چرا داده‌ی تمیز مهم‌تر از هوش مصنوعی گران‌قیمت است\",\n  \"چطور یک کسب‌وکار خانوادگی کوچک هم می‌تواند از اتوماسیون سود ببرد\",\n  \"مقایسه هزینه استخدام نیروی جدید در برابر اتوماسیون همان کار\",\n  \"چک‌لیست امنیتی قبل از وصل کردن ربات به دیتابیس واقعی مشتریان\",\n  \"چطور با اتوماسیون گزارش‌گیری روزانه، دیگر نیازی به اکسل دستی نباشد\",\n  \"اتوماسیون یادآوری پرداخت و کاهش مطالبات معوق\",\n  \"چطور محتوای تولیدشده توسط هوش مصنوعی را قبل از انتشار خودکار کیفیت‌سنجی کنیم\",\n  \"نشانه‌هایی که می‌گویند وقتشه یک فرآیند دستی را اتوماتیک کنید\",\n  \"چطور یک ربات تلگرام می‌تواند به‌جای کارمند، تماس‌های تکراری مشتری را جواب بدهد\",\n  \"اتوماسیون هماهنگی جلسات و وقت‌دهی بدون رفت‌وبرگشت پیام\",\n  \"چطور با n8n چند سرویس پراکنده (ایمیل، تلگرام، اکسل) را یک‌جا مدیریت کنیم\",\n  \"اشتباهات رایج در طراحی اولین ورک‌فلوی اتوماسیون یک شرکت\"\n];\nconst idx = Math.floor(Math.random() * topics.length);\nreturn [{ json: { topic: topics[idx] } }];"
       }
     },
     {
@@ -58,7 +58,7 @@
       "typeVersion": 2,
       "position": [0, 0],
       "parameters": {
-        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst tagsYaml = article.tags.map((t) => `\"${t}\"`).join(\", \");\n\nconst frontmatter = `---\\ntitle: \"${article.title.replace(/\"/g, '\\\\\"')}\"\\ndescription: \"${article.description.replace(/\"/g, '\\\\\"')}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: article.slug,\n    title: article.title,\n    path: `content/blog/${article.slug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst uniqueSlug = `${article.slug}-${today}`;\nconst tagsYaml = article.tags.map((t) => `\"${t}\"`).join(\", \");\n\nconst frontmatter = `---\\ntitle: \"${article.title.replace(/\"/g, '\\\\\"')}\"\\ndescription: \"${article.description.replace(/\"/g, '\\\\\"')}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: uniqueSlug,\n    title: article.title,\n    path: `content/blog/${uniqueSlug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
       }
     },
     {
