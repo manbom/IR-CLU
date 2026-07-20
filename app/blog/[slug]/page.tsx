@@ -56,6 +56,18 @@ export default async function BlogPostPage({
     publisher: { "@type": "Organization", name: "IR-CLU" },
   };
 
+  const faqJsonLd = post.faq.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: post.faq.map((item) => ({
+          "@type": "Question",
+          name: item.question,
+          acceptedAnswer: { "@type": "Answer", text: item.answer },
+        })),
+      }
+    : null;
+
   return (
     <main className="pt-32 pb-24 md:pt-40">
       <Container className="max-w-3xl">
@@ -93,6 +105,25 @@ export default async function BlogPostPage({
           dangerouslySetInnerHTML={{ __html: post.html }}
         />
 
+        {post.faq.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-xl font-bold text-foreground">سوالات متداول</h2>
+            <div className="mt-6 flex flex-col gap-3">
+              {post.faq.map((item) => (
+                <details
+                  key={item.question}
+                  className="group rounded-xl border border-border bg-surface p-5"
+                >
+                  <summary className="cursor-pointer list-none font-semibold text-foreground marker:content-none">
+                    {item.question}
+                  </summary>
+                  <p className="mt-3 leading-8 text-muted">{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
           <p className="leading-8 text-muted">
             می‌خواهید ببینید این موضوع دقیقاً برای کسب‌وکار شما چه شکلی می‌شود؟
@@ -111,6 +142,12 @@ export default async function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
     </main>
   );
 }

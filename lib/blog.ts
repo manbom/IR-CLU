@@ -5,6 +5,8 @@ import { marked } from "marked";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
+export type FaqItem = { question: string; answer: string };
+
 export type PostMeta = {
   slug: string;
   title: string;
@@ -12,6 +14,7 @@ export type PostMeta = {
   date: string;
   tags: string[];
   readingTime: number;
+  faq: FaqItem[];
 };
 
 export type Post = PostMeta & {
@@ -41,6 +44,7 @@ export function getAllPosts(): PostMeta[] {
       date: data.date as string,
       tags: (data.tags as string[]) ?? [],
       readingTime: readingTimeFor(content),
+      faq: (data.faq as FaqItem[]) ?? [],
     };
   });
 
@@ -58,6 +62,7 @@ export function getPostBySlug(slug: string): Post {
     date: data.date as string,
     tags: (data.tags as string[]) ?? [],
     readingTime: readingTimeFor(content),
+    faq: (data.faq as FaqItem[]) ?? [],
     html: marked.parse(content, { async: false }) as string,
   };
 }
