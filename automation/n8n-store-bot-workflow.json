@@ -1,0 +1,496 @@
+{
+  "name": "IR-CLU — ربات فروش و پرداخت",
+  "nodes": [
+    {
+      "id": "tg-trigger",
+      "name": "پیام جدید در ربات فروش",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [-1200, 0],
+      "parameters": {
+        "updates": ["message"]
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
+    },
+    {
+      "id": "code-parse-start",
+      "name": "استخراج اسلاگ محصول",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-960, 0],
+      "parameters": {
+        "jsCode": "const text = ($json.message?.text || \"\").trim();\nconst chatId = $json.message?.chat?.id;\nconst username = $json.message?.from?.username || \"\";\nconst firstName = $json.message?.from?.first_name || \"\";\n\nconst match = text.match(/^\\/start\\s+(.+)$/);\nconst slug = match ? match[1].trim() : null;\n\nreturn [{\n  json: { chatId, username, firstName, slug, rawText: text },\n}];"
+      }
+    },
+    {
+      "id": "if-has-slug",
+      "name": "لینک محصول معتبر است؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-720, 0],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.slug }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-no-slug",
+      "name": "راهنمای عمومی فروشگاه",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-480, 180],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=سلام {{ $json.firstName }} 👋\nبرای خرید هر محصول، از صفحه‌ی فروشگاه سایت (irclu.com/store) روی دکمه‌ی «خرید در تلگرام» همون محصول بزن تا مستقیم بیای این‌جا."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "sheets-read-products",
+      "name": "خواندن محصولات",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-480, -120],
+      "parameters": {
+        "operation": "read",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Products" }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "code-find-product",
+      "name": "پیدا کردن محصول",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, -120],
+      "parameters": {
+        "jsCode": "const slug = $('استخراج اسلاگ محصول').first().json.slug;\nconst chatId = $('استخراج اسلاگ محصول').first().json.chatId;\nconst username = $('استخراج اسلاگ محصول').first().json.username;\n\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === slug && String(r.active).toLowerCase() === 'true');\n\nreturn [{\n  json: { found: !!product, chatId, username, slug, product: product || null },\n}];"
+      }
+    },
+    {
+      "id": "if-product-found",
+      "name": "محصول پیدا و فعال است؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [0, -120],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-not-found",
+      "name": "محصول پیدا نشد",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [240, 60],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "این محصول دیگر در دسترس نیست یا لینک اشتباه است. از صفحه‌ی فروشگاه (irclu.com/store) دوباره امتحان کن."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "http-zarinpal-request",
+      "name": "درخواست پرداخت زرین‌پال",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, -240],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zarinpal.com/pg/rest/WebGate/PaymentRequest.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  MerchantID: $env.ZARINPAL_MERCHANT_ID,\n  Amount: Number($json.product.price),\n  Description: \"خرید اشتراک ماهانه: \" + $json.product.title,\n  CallbackURL: $env.STORE_CALLBACK_URL + \"?slug=\" + $json.slug\n}) }}"
+      }
+    },
+    {
+      "id": "code-build-payment-link",
+      "name": "ساخت لینک پرداخت",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, -240],
+      "parameters": {
+        "jsCode": "const found = $('پیدا کردن محصول').first().json;\nconst pay = $input.first().json;\n\nconst authority = pay.Authority;\nconst payLink = `https://www.zarinpal.com/pg/StartPay/${authority}`;\n\nreturn [{\n  json: {\n    chatId: found.chatId,\n    username: found.username,\n    slug: found.slug,\n    product: found.product,\n    authority,\n    payLink,\n  },\n}];"
+      }
+    },
+    {
+      "id": "sheets-append-order",
+      "name": "ثبت سفارش در انتظار پرداخت",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [720, -240],
+      "parameters": {
+        "operation": "append",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Orders" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "authority": "={{ $json.authority }}",
+            "telegram_user_id": "={{ $json.chatId }}",
+            "telegram_username": "={{ $json.username }}",
+            "product_slug": "={{ $json.slug }}",
+            "amount": "={{ $json.product.price }}",
+            "status": "pending",
+            "created_at": "={{ new Date().toISOString() }}",
+            "paid_at": "",
+            "expires_at": "",
+            "ref_id": "",
+            "renewal_notified": "false"
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "tg-send-pay-link",
+      "name": "ارسال لینک پرداخت",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, -240],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=✅ {{ $json.product.title }}\nمبلغ: {{ Number($json.product.price).toLocaleString('fa-IR') }} تومان (ماهانه)\n\nبرای پرداخت روی لینک زیر بزن. بعد از پرداخت موفق، همین‌جا فایل/راهنما رو خودکار دریافت می‌کنی:\n{{ $json.payLink }}"
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+
+    {
+      "id": "webhook-zarinpal-callback",
+      "name": "بازگشت از زرین‌پال",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-1200, 400],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "zarinpal-callback",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "sheets-find-order",
+      "name": "پیدا کردن سفارش با Authority",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-960, 400],
+      "parameters": {
+        "operation": "read",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Orders" }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "code-match-order",
+      "name": "تطبیق سفارش",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-720, 400],
+      "parameters": {
+        "jsCode": "const query = $('بازگشت از زرین‌پال').first().json.query;\nconst authority = query.Authority;\nconst zarinpalStatus = query.Status;\n\nconst rows = $input.all().map((i) => i.json);\nconst rowIndex = rows.findIndex((r) => r.authority === authority);\nconst order = rowIndex >= 0 ? rows[rowIndex] : null;\n\nreturn [{\n  json: { authority, zarinpalStatus, order, rowNumber: rowIndex >= 0 ? rowIndex + 2 : null },\n}];"
+      }
+    },
+    {
+      "id": "http-zarinpal-verify",
+      "name": "تأیید پرداخت زرین‌پال",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-480, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.zarinpal.com/pg/rest/WebGate/PaymentVerification.json",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  MerchantID: $env.ZARINPAL_MERCHANT_ID,\n  Amount: Number($json.order.amount),\n  Authority: $json.authority\n}) }}"
+      }
+    },
+    {
+      "id": "if-payment-ok",
+      "name": "پرداخت موفق بود؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-240, 400],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": 100,
+              "operator": { "type": "number", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-payment-failed",
+      "name": "اطلاع پرداخت ناموفق",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [0, 560],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('تطبیق سفارش').first().json.order.telegram_user_id }}",
+        "text": "پرداخت انجام نشد یا لغو شد. اگر مبلغی کسر شده، ظرف چند دقیقه برمی‌گردد. برای تلاش دوباره، از صفحه‌ی فروشگاه اقدام کن."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "sheets-mark-paid",
+      "name": "علامت‌گذاری سفارش به‌عنوان پرداخت‌شده",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [0, 300],
+      "parameters": {
+        "operation": "update",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Orders" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["authority"],
+          "value": {
+            "authority": "={{ $('تطبیق سفارش').first().json.authority }}",
+            "status": "paid",
+            "paid_at": "={{ new Date().toISOString() }}",
+            "expires_at": "={{ new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }}",
+            "ref_id": "={{ $json.RefID }}"
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "sheets-read-product-for-delivery",
+      "name": "خواندن محصول برای تحویل",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [240, 300],
+      "parameters": {
+        "operation": "read",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Products" }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "code-match-product-delivery",
+      "name": "تطبیق محصول تحویلی",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "parameters": {
+        "jsCode": "const order = $('تطبیق سفارش').first().json.order;\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === order.product_slug);\n\nreturn [{ json: { order, product } }];"
+      }
+    },
+    {
+      "id": "if-product-type-app",
+      "name": "نوع محصول = اپلیکیشن؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [720, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.product.type }}",
+              "rightValue": "app",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-deliver-app",
+      "name": "تحویل لینک دانلود اپلیکیشن",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 180],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.order.telegram_user_id }}",
+        "text": "=🎉 پرداخت با موفقیت تأیید شد!\n\nلینک دانلود {{ $json.product.title }}:\n{{ $json.product.file_url }}\n\nاشتراک شما تا یک ماه دیگر فعال است. نزدیک پایان اشتراک، پیام یادآوری برات می‌فرستیم."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "tg-deliver-bot-customer",
+      "name": "اطلاع راه‌اندازی ربات به مشتری",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 420],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.order.telegram_user_id }}",
+        "text": "=🎉 پرداخت با موفقیت تأیید شد!\n\nچون {{ $json.product.title }} برای هر مشتری جداگانه راه‌اندازی می‌شود، تیم ما ظرف حداکثر ۲۴ ساعت با شما (از همین چت) تماس می‌گیرد تا ربات اختصاصی‌تان را فعال کند."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "tg-notify-admin",
+      "name": "اطلاع فروش جدید به ادمین",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1200, 420],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "PLACEHOLDER_ADMIN_CHAT_ID",
+        "text": "=💰 فروش جدید (نیاز به راه‌اندازی دستی)\nمحصول: {{ $json.product.title }}\nمشتری: @{{ $json.order.telegram_username }} (chat id: {{ $json.order.telegram_user_id }})\nمبلغ: {{ Number($json.order.amount).toLocaleString('fa-IR') }} تومان"
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "respond-webhook",
+      "name": "پاسخ نهایی به مرورگر",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [1440, 300],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "پرداخت شما پردازش شد. به تلگرام برگردید — پیام تحویل همین الان ارسال شد."
+      }
+    }
+  ],
+  "connections": {
+    "پیام جدید در ربات فروش": {
+      "main": [[{ "node": "استخراج اسلاگ محصول", "type": "main", "index": 0 }]]
+    },
+    "استخراج اسلاگ محصول": {
+      "main": [[{ "node": "لینک محصول معتبر است؟", "type": "main", "index": 0 }]]
+    },
+    "لینک محصول معتبر است؟": {
+      "main": [
+        [{ "node": "خواندن محصولات", "type": "main", "index": 0 }],
+        [{ "node": "راهنمای عمومی فروشگاه", "type": "main", "index": 0 }]
+      ]
+    },
+    "خواندن محصولات": {
+      "main": [[{ "node": "پیدا کردن محصول", "type": "main", "index": 0 }]]
+    },
+    "پیدا کردن محصول": {
+      "main": [[{ "node": "محصول پیدا و فعال است؟", "type": "main", "index": 0 }]]
+    },
+    "محصول پیدا و فعال است؟": {
+      "main": [
+        [{ "node": "درخواست پرداخت زرین‌پال", "type": "main", "index": 0 }],
+        [{ "node": "محصول پیدا نشد", "type": "main", "index": 0 }]
+      ]
+    },
+    "درخواست پرداخت زرین‌پال": {
+      "main": [[{ "node": "ساخت لینک پرداخت", "type": "main", "index": 0 }]]
+    },
+    "ساخت لینک پرداخت": {
+      "main": [[{ "node": "ثبت سفارش در انتظار پرداخت", "type": "main", "index": 0 }]]
+    },
+    "ثبت سفارش در انتظار پرداخت": {
+      "main": [[{ "node": "ارسال لینک پرداخت", "type": "main", "index": 0 }]]
+    },
+    "بازگشت از زرین‌پال": {
+      "main": [[{ "node": "پیدا کردن سفارش با Authority", "type": "main", "index": 0 }]]
+    },
+    "پیدا کردن سفارش با Authority": {
+      "main": [[{ "node": "تطبیق سفارش", "type": "main", "index": 0 }]]
+    },
+    "تطبیق سفارش": {
+      "main": [[{ "node": "تأیید پرداخت زرین‌پال", "type": "main", "index": 0 }]]
+    },
+    "تأیید پرداخت زرین‌پال": {
+      "main": [[{ "node": "پرداخت موفق بود؟", "type": "main", "index": 0 }]]
+    },
+    "پرداخت موفق بود؟": {
+      "main": [
+        [{ "node": "علامت‌گذاری سفارش به‌عنوان پرداخت‌شده", "type": "main", "index": 0 }],
+        [{ "node": "اطلاع پرداخت ناموفق", "type": "main", "index": 0 }]
+      ]
+    },
+    "علامت‌گذاری سفارش به‌عنوان پرداخت‌شده": {
+      "main": [[{ "node": "خواندن محصول برای تحویل", "type": "main", "index": 0 }]]
+    },
+    "خواندن محصول برای تحویل": {
+      "main": [[{ "node": "تطبیق محصول تحویلی", "type": "main", "index": 0 }]]
+    },
+    "تطبیق محصول تحویلی": {
+      "main": [[{ "node": "نوع محصول = اپلیکیشن؟", "type": "main", "index": 0 }]]
+    },
+    "نوع محصول = اپلیکیشن؟": {
+      "main": [
+        [{ "node": "تحویل لینک دانلود اپلیکیشن", "type": "main", "index": 0 }],
+        [{ "node": "اطلاع راه‌اندازی ربات به مشتری", "type": "main", "index": 0 }]
+      ]
+    },
+    "تحویل لینک دانلود اپلیکیشن": {
+      "main": [[{ "node": "پاسخ نهایی به مرورگر", "type": "main", "index": 0 }]]
+    },
+    "اطلاع راه‌اندازی ربات به مشتری": {
+      "main": [[{ "node": "اطلاع فروش جدید به ادمین", "type": "main", "index": 0 }]]
+    },
+    "اطلاع فروش جدید به ادمین": {
+      "main": [[{ "node": "پاسخ نهایی به مرورگر", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

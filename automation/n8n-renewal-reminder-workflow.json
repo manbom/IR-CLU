@@ -1,0 +1,97 @@
+{
+  "name": "IR-CLU — یادآوری تمدید اشتراک",
+  "nodes": [
+    {
+      "id": "trigger-daily",
+      "name": "هر روز ساعت ۱۰ صبح",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-720, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 0 10 * * *" }]
+        }
+      }
+    },
+    {
+      "id": "sheets-read-orders",
+      "name": "خواندن سفارش‌ها",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-480, 0],
+      "parameters": {
+        "operation": "read",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Orders" }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    },
+    {
+      "id": "code-find-expiring",
+      "name": "پیدا کردن اشتراک‌های رو‌به‌انقضا",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 0],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((i) => i.json);\nconst now = Date.now();\nconst threeDaysMs = 3 * 24 * 60 * 60 * 1000;\n\nconst expiring = rows.filter((r) => {\n  if (r.status !== 'paid' || !r.expires_at) return false;\n  if (r.renewal_notified === 'true') return false;\n  const expiresAt = new Date(r.expires_at).getTime();\n  return expiresAt - now > 0 && expiresAt - now <= threeDaysMs;\n});\n\nreturn expiring.map((r) => ({ json: r }));"
+      }
+    },
+    {
+      "id": "tg-send-reminder",
+      "name": "ارسال یادآوری تمدید",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.telegram_user_id }}",
+        "text": "=⏰ اشتراک محصول شما تا ۳ روز دیگر منقضی می‌شود.\nبرای تمدید، دوباره از صفحه‌ی فروشگاه (irclu.com/store) روی همون محصول بزن و پرداخت رو انجام بده."
+      },
+      "credentials": {
+        "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
+      }
+    },
+    {
+      "id": "sheets-mark-notified",
+      "name": "علامت‌گذاری یادآوری‌شده",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [240, 0],
+      "parameters": {
+        "operation": "update",
+        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
+        "sheetName": { "mode": "name", "value": "Orders" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": ["authority"],
+          "value": {
+            "authority": "={{ $json.authority }}",
+            "renewal_notified": "true"
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" }
+      }
+    }
+  ],
+  "connections": {
+    "هر روز ساعت ۱۰ صبح": {
+      "main": [[{ "node": "خواندن سفارش‌ها", "type": "main", "index": 0 }]]
+    },
+    "خواندن سفارش‌ها": {
+      "main": [[{ "node": "پیدا کردن اشتراک‌های رو‌به‌انقضا", "type": "main", "index": 0 }]]
+    },
+    "پیدا کردن اشتراک‌های رو‌به‌انقضا": {
+      "main": [[{ "node": "ارسال یادآوری تمدید", "type": "main", "index": 0 }]]
+    },
+    "ارسال یادآوری تمدید": {
+      "main": [[{ "node": "علامت‌گذاری یادآوری‌شده", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}

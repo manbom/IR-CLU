@@ -4,5 +4,6 @@ export const navItems = [
   { href: "/#about", label: "درباره ما" },
   { href: "/#portfolio", label: "نمونه‌کارها" },
   { href: "/blog/", label: "مقالات" },
+  { href: "/store/", label: "فروشگاه" },
   { href: "/#contact", label: "تماس" },
 ];
