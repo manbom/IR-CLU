@@ -35,7 +35,7 @@
       "typeVersion": 2,
       "position": [-240, 0],
       "parameters": {
-        "jsCode": "const rows = $input.all().map((i) => i.json);\nconst now = Date.now();\nconst threeDaysMs = 3 * 24 * 60 * 60 * 1000;\n\nconst expiring = rows.filter((r) => {\n  if (r.status !== 'paid' || !r.expires_at) return false;\n  if (r.renewal_notified === 'true') return false;\n  const expiresAt = new Date(r.expires_at).getTime();\n  return expiresAt - now > 0 && expiresAt - now <= threeDaysMs;\n});\n\nreturn expiring.map((r) => ({ json: r }));"
+        "jsCode": "const rows = $input.all().map((i) => i.json);\nconst now = Date.now();\nconst threeDaysMs = 3 * 24 * 60 * 60 * 1000;\n\nconst expiring = rows.filter((r) => {\n  if (r.status !== 'delivered' || !r.expires_at) return false;\n  if (r.renewal_notified === 'true') return false;\n  const expiresAt = new Date(r.expires_at).getTime();\n  return expiresAt - now > 0 && expiresAt - now <= threeDaysMs;\n});\n\nreturn expiring.map((r) => ({ json: r }));"
       }
     },
     {
@@ -48,7 +48,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.telegram_user_id }}",
-        "text": "=⏰ اشتراک محصول شما تا ۳ روز دیگر منقضی می‌شود.\nبرای تمدید، دوباره از صفحه‌ی فروشگاه (irclu.com/store) روی همون محصول بزن و پرداخت رو انجام بده."
+        "text": "=⏰ اشتراک محصول شما تا ۳ روز دیگر منقضی می‌شود.\nبرای تمدید، دوباره از صفحه‌ی فروشگاه (irclu.com/store) روی همون محصول بزن، نیازهات رو تکرار کن، و مثل قبل کارت‌به‌کارت رو انجام بده."
       },
       "credentials": {
         "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" }
@@ -66,9 +66,9 @@
         "sheetName": { "mode": "name", "value": "Orders" },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["authority"],
+          "matchingColumns": ["order_id"],
           "value": {
-            "authority": "={{ $json.authority }}",
+            "order_id": "={{ $json.order_id }}",
             "renewal_notified": "true"
           }
         }

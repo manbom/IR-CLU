@@ -1,0 +1,3 @@
+<FilesMatch "opengraph-image$">
+  ForceType image/png
+</FilesMatch>

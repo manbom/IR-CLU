@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
@@ -86,6 +87,17 @@ export default async function BlogPostPage({
         <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
           {post.title}
         </h1>
+
+        <div className="relative mt-8 aspect-[1200/630] overflow-hidden rounded-2xl border border-border">
+          <Image
+            src={`/blog/${slug}/opengraph-image`}
+            alt=""
+            fill
+            sizes="(max-width: 768px) 100vw, 768px"
+            className="object-cover"
+            priority
+          />
+        </div>
 
         {post.tags.length > 0 && (
           <div className="mt-6 flex flex-wrap gap-2">
