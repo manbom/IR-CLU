@@ -6,16 +6,31 @@
       "name": "پیام جدید در ربات فروش",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.1,
-      "position": [-1600, 0],
-      "parameters": { "updates": ["message"] },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "position": [
+        -1600,
+        0
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "code-classify",
       "name": "تشخیص نوع پیام",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-1360, 0],
+      "position": [
+        -1360,
+        0
+      ],
       "parameters": {
         "jsCode": "const msg = $json.message || {};\nconst chatId = msg.chat?.id;\nconst username = msg.from?.username || \"\";\nconst firstName = msg.from?.first_name || \"\";\nconst text = (msg.text || \"\").trim();\n\n// یکی از دو جایی که باید Chat ID خودت رو جایگزین کنی — راهنمای دقیق توی پیام چت هست\nconst adminChatId = \"PLACEHOLDER_ADMIN_CHAT_ID\";\n\nlet kind = \"free_text\";\nlet slug = null;\nlet decisionAction = null;\nlet decisionOrderId = null;\n\nif (msg.contact) {\n  kind = \"contact\";\n} else if (/^\\/start\\s+\\S+/.test(text)) {\n  kind = \"start_product\";\n  slug = text.match(/^\\/start\\s+(\\S+)/)[1];\n} else if (msg.photo && msg.photo.length) {\n  kind = \"photo_receipt\";\n} else if (String(chatId) === adminChatId && /^(تایید|رد)\\s+(ORDER-\\S+)/.test(text)) {\n  kind = \"admin_decision\";\n  const m = text.match(/^(تایید|رد)\\s+(ORDER-\\S+)/);\n  decisionAction = m[1] === \"تایید\" ? \"approve\" : \"reject\";\n  decisionOrderId = m[2];\n}\n\nconst photo = msg.photo ? msg.photo[msg.photo.length - 1] : null;\n\nreturn [{\n  json: {\n    kind, chatId, username, firstName, text, slug,\n    decisionAction, decisionOrderId,\n    photoFileId: photo ? photo.file_id : null,\n  },\n}];"
       }
@@ -25,34 +40,122 @@
       "name": "مسیر بر اساس نوع پیام",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [-1120, 0],
+      "position": [
+        -1120,
+        0
+      ],
       "parameters": {
         "rules": {
           "values": [
-            { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.kind }}", "rightValue": "contact", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "contact" },
-            { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.kind }}", "rightValue": "start_product", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "start_product" },
-            { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.kind }}", "rightValue": "photo_receipt", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "photo_receipt" },
-            { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.kind }}", "rightValue": "admin_decision", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "admin_decision" },
-            { "conditions": { "combinator": "and", "conditions": [{ "leftValue": "={{ $json.kind }}", "rightValue": "free_text", "operator": { "type": "string", "operation": "equals" } }] }, "outputKey": "free_text" }
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "contact",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "contact"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "start_product",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "start_product"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "photo_receipt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "photo_receipt"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "admin_decision",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "admin_decision"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "free_text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "free_text"
+            }
           ]
         },
         "options": {}
       }
     },
-
     {
       "id": "sheets-save-phone",
       "name": "ذخیره شماره تلفن",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-880, -600],
+      "position": [
+        -880,
+        -600
+      ],
       "parameters": {
         "operation": "appendOrUpdate",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["telegram_user_id"],
+          "matchingColumns": [
+            "telegram_user_id"
+          ],
           "value": {
             "telegram_user_id": "={{ $json.chatId }}",
             "username": "={{ $json.username }}",
@@ -61,27 +164,50 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "sheets-read-customer-after-phone",
       "name": "خواندن وضعیت مشتری",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-640, -600],
+      "position": [
+        -640,
+        -600
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-resume-after-phone",
       "name": "ادامه دادن بعد از احراز هویت",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-400, -600],
+      "position": [
+        -400,
+        -600
+      ],
       "parameters": {
         "jsCode": "const chatId = $('تشخیص نوع پیام').first().json.chatId;\nconst username = $('تشخیص نوع پیام').first().json.username;\nconst firstName = $('تشخیص نوع پیام').first().json.firstName;\n\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_product:(.+)$/);\n\nreturn [{\n  json: { chatId, username, firstName, resumeSlug: m ? m[1] : null },\n}];"
       }
@@ -91,49 +217,90 @@
       "name": "تأیید ثبت شماره",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [-160, -700],
+      "position": [
+        -160,
+        -700
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "ممنون، شماره‌ات ثبت شد ✅"
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "if-has-resume-slug",
       "name": "محصولی در انتظار بود؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-160, -500],
+      "position": [
+        -160,
+        -500
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.resumeSlug }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.resumeSlug }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
     },
-
     {
       "id": "sheets-read-customers-for-check",
       "name": "خواندن مشتریان",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-880, -200],
+      "position": [
+        -880,
+        -200
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-check-phone",
       "name": "بررسی احراز هویت",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-640, -200],
+      "position": [
+        -640,
+        -200
+      ],
       "parameters": {
         "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(t.chatId));\n\nreturn [{\n  json: { ...t, hasPhone: !!(row && row.phone) },\n}];"
       }
@@ -143,11 +310,28 @@
       "name": "شماره قبلاً ثبت شده؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-400, -200],
+      "position": [
+        -400,
+        -200
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.hasPhone }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hasPhone }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -157,56 +341,97 @@
       "name": "ذخیره محصول در انتظار",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-160, -100],
+      "position": [
+        -160,
+        -100
+      ],
       "parameters": {
         "operation": "appendOrUpdate",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["telegram_user_id"],
+          "matchingColumns": [
+            "telegram_user_id"
+          ],
           "value": {
             "telegram_user_id": "={{ $json.chatId }}",
             "pending_state": "=awaiting_product:{{ $json.slug }}"
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "tg-request-phone",
       "name": "درخواست شماره تلفن",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [80, -100],
+      "position": [
+        80,
+        -100
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "برای ادامه، اول لطفاً شماره تلفنت رو با دکمه زیر به اشتراک بذار 👇"
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
-
     {
       "id": "sheets-read-products",
       "name": "خواندن محصولات",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [80, 100],
+      "position": [
+        80,
+        100
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Products" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Products"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-find-product",
       "name": "پیدا کردن محصول",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [320, 100],
+      "position": [
+        320,
+        100
+      ],
       "parameters": {
         "jsCode": "const slug = $json.slug || $json.resumeSlug;\nconst chatId = $json.chatId;\nconst username = $json.username;\n\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === slug && String(r.active).toLowerCase() === 'true');\n\nreturn [{ json: { found: !!product, chatId, username, slug, product: product || null } }];"
       }
@@ -216,11 +441,28 @@
       "name": "محصول پیدا شد؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [560, 100],
+      "position": [
+        560,
+        100
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.found }}", "rightValue": true, "operator": { "type": "boolean", "operation": "true", "singleValue": true } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.found }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -230,21 +472,32 @@
       "name": "محصول پیدا نشد",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [800, 220],
+      "position": [
+        800,
+        220
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "این محصول در دسترس نیست. از صفحه‌ی فروشگاه (irclu.com/store) دوباره امتحان کن."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "code-create-order",
       "name": "ساخت سفارش جدید",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [800, -20],
+      "position": [
+        800,
+        -20
+      ],
       "parameters": {
         "jsCode": "const orderId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;\nreturn [{ json: { ...$json, orderId } }];"
       }
@@ -254,11 +507,20 @@
       "name": "ثبت سفارش (در انتظار نیازها)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1040, -20],
+      "position": [
+        1040,
+        -20
+      ],
       "parameters": {
         "operation": "append",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -277,63 +539,109 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "sheets-set-pending-requirements",
       "name": "ثبت وضعیت در انتظار نیازها",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1280, -20],
+      "position": [
+        1280,
+        -20
+      ],
       "parameters": {
         "operation": "appendOrUpdate",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["telegram_user_id"],
+          "matchingColumns": [
+            "telegram_user_id"
+          ],
           "value": {
             "telegram_user_id": "={{ $json.chatId }}",
             "pending_state": "=awaiting_requirements:{{ $json.orderId }}"
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "tg-ask-requirements",
       "name": "درخواست توضیح نیازها",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1520, -20],
+      "position": [
+        1520,
+        -20
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "=✅ {{ $json.product.title }}\nقیمت: {{ Number($json.product.price).toLocaleString('fa-IR') }} تومان (ماهانه)\n\nحالا با زبان خودت برام بنویس دقیقاً چه نیازی داری (نوع کسب‌وکار، چه کاری باید انجام بشه، هر جزئیات مهمی). هوش مصنوعی ما همین الان خلاصه‌اش می‌کنه و می‌فرسته پیش تیم ما."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
-
     {
       "id": "sheets-read-customer-freetext",
       "name": "خواندن وضعیت (پیام آزاد)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-880, 500],
+      "position": [
+        -880,
+        500
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-check-awaiting",
       "name": "بررسی انتظار نیازها",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-640, 500],
+      "position": [
+        -640,
+        500
+      ],
       "parameters": {
         "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(t.chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_requirements:(.+)$/);\n\nreturn [{\n  json: { ...t, awaitingOrderId: m ? m[1] : null },\n}];"
       }
@@ -343,11 +651,27 @@
       "name": "در انتظار نیازهاست؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-400, 500],
+      "position": [
+        -400,
+        500
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.awaitingOrderId }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.awaitingOrderId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -357,33 +681,59 @@
       "name": "خلاصه‌سازی نیازها با OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-160, 400],
+      "position": [
+        -160,
+        400
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "content-type", "value": "application/json" }] },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({\n  model: \"gpt-4o-mini\",\n  messages: [\n    { role: \"system\", content: \"یک تحلیل‌گر نیازمندی مشتری برای استودیوی اتوماسیون IR-CLU هستی. پیام مشتری را در چند خط خلاصه‌ی فارسی، شفاف و کاربردی برای تیم فنی بازنویسی کن؛ نوع کسب‌وکار، خواسته اصلی، و هر جزئیات مهمی که ذکر کرده را نگه دار. فقط خلاصه را بنویس، بدون مقدمه.\" },\n    { role: \"user\", content: $json.text }\n  ]\n}) }}"
       },
-      "credentials": { "httpHeaderAuth": { "id": "PLACEHOLDER", "name": "OpenAI API Key (Authorization: Bearer)" } }
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLACEHOLDER",
+          "name": "OpenAI API Key (Authorization: Bearer)"
+        }
+      }
     },
     {
       "id": "sheets-update-requirements",
       "name": "ثبت خلاصه نیازها در سفارش",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [80, 400],
+      "position": [
+        80,
+        400
+      ],
       "parameters": {
         "operation": "update",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["order_id"],
+          "matchingColumns": [
+            "order_id"
+          ],
           "value": {
             "order_id": "={{ $('بررسی انتظار نیازها').first().json.awaitingOrderId }}",
             "requirements_summary": "={{ $json.choices[0].message.content }}",
@@ -391,87 +741,159 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "sheets-clear-pending",
       "name": "پاک کردن وضعیت در انتظار",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [320, 400],
+      "position": [
+        320,
+        400
+      ],
       "parameters": {
         "operation": "appendOrUpdate",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Customers" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["telegram_user_id"],
-          "value": { "telegram_user_id": "={{ $('بررسی انتظار نیازها').first().json.chatId }}", "pending_state": "" }
+          "matchingColumns": [
+            "telegram_user_id"
+          ],
+          "value": {
+            "telegram_user_id": "={{ $('بررسی انتظار نیازها').first().json.chatId }}",
+            "pending_state": ""
+          }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "sheets-read-order-for-payment",
       "name": "خواندن سفارش برای نمایش پرداخت",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [560, 400],
+      "position": [
+        560,
+        400
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "tg-show-payment-info",
       "name": "نمایش اطلاعات پرداخت",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [800, 400],
+      "position": [
+        800,
+        400
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('بررسی انتظار نیازها').first().json.chatId }}",
         "text": "ممنون، نیازهات ثبت شد ✅\n\nبرای تکمیل سفارش، مبلغ رو کارت‌به‌کارت کن:\n\n💳 شماره کارت: PLACEHOLDER_CARD_NUMBER\nبه نام: PLACEHOLDER_CARD_HOLDER\nمبلغ: مطابق قیمت محصول (توی پیام قبلی نوشته شد)\n\nبعد از واریز، همین‌جا عکس رسید/فیش واریزی رو بفرست تا تیم ما بررسی و تأیید کنه."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "tg-generic-help",
       "name": "پاسخ عمومی / راهنما",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [-160, 620],
+      "position": [
+        -160,
+        620
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "=سلام {{ $json.firstName }} 👋\nبرای خرید هر محصول، از صفحه‌ی فروشگاه سایت (irclu.com/store) روی دکمه‌ی «خرید در تلگرام» همون محصول بزن.\nهر سؤالی هم درباره خدمات ما داری، همینجا بپرس."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
-
     {
       "id": "sheets-read-orders-for-receipt",
       "name": "خواندن سفارش‌ها (رسید)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-880, 900],
+      "position": [
+        -880,
+        900
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-find-pending-order",
       "name": "پیدا کردن سفارش در انتظار پرداخت",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-640, 900],
+      "position": [
+        -640,
+        900
+      ],
       "parameters": {
         "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => String(r.telegram_user_id) === String(t.chatId) && r.status === 'awaiting_payment');\n\nreturn [{ json: { ...t, order: order || null } }];"
       }
@@ -481,11 +903,27 @@
       "name": "سفارشی در انتظار پرداخت هست؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-400, 900],
+      "position": [
+        -400,
+        900
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.order }}", "rightValue": "", "operator": { "type": "string", "operation": "notEmpty" } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.order }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -495,28 +933,47 @@
       "name": "سفارشی پیدا نشد",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [-160, 1020],
+      "position": [
+        -160,
+        1020
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "سفارش در انتظار پرداختی از تو پیدا نکردم. از صفحه‌ی فروشگاه دوباره شروع کن."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "sheets-mark-receipt-received",
       "name": "ثبت رسید پرداخت",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-160, 820],
+      "position": [
+        -160,
+        820
+      ],
       "parameters": {
         "operation": "update",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["order_id"],
+          "matchingColumns": [
+            "order_id"
+          ],
           "value": {
             "order_id": "={{ $json.order.order_id }}",
             "status": "pending_review",
@@ -524,28 +981,44 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "tg-ack-receipt",
       "name": "تأیید دریافت رسید به مشتری",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [80, 820],
+      "position": [
+        80,
+        820
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
         "text": "رسیدت رسید ✅ تیم ما ظرف چند ساعت بررسی می‌کنه و بهت اطلاع می‌ده."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "tg-forward-receipt-admin",
       "name": "ارسال رسید به ادمین",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [320, 820],
+      "position": [
+        320,
+        820
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendPhoto",
@@ -553,28 +1026,50 @@
         "fileId": "={{ $('تشخیص نوع پیام').first().json.photoFileId }}",
         "caption": "=💳 رسید پرداخت جدید\nسفارش: {{ $json.order.order_id }}\nمحصول: {{ $json.order.product_slug }}\nمشتری: @{{ $json.order.telegram_username }}\nمبلغ: {{ Number($json.order.amount).toLocaleString('fa-IR') }} تومان\nنیازها: {{ $json.order.requirements_summary }}\n\nبرای تأیید بفرست:\nتایید {{ $json.order.order_id }}\nبرای رد بفرست:\nرد {{ $json.order.order_id }}"
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
-
     {
       "id": "sheets-read-orders-for-decision",
       "name": "خواندن سفارش‌ها (تصمیم ادمین)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-880, 1300],
+      "position": [
+        -880,
+        1300
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-match-decision-order",
       "name": "تطبیق سفارش با تصمیم",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-640, 1300],
+      "position": [
+        -640,
+        1300
+      ],
       "parameters": {
         "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => r.order_id === t.decisionOrderId);\n\nreturn [{ json: { ...t, order: order || null } }];"
       }
@@ -584,11 +1079,27 @@
       "name": "تأیید یا رد؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [-400, 1300],
+      "position": [
+        -400,
+        1300
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.decisionAction }}", "rightValue": "approve", "operator": { "type": "string", "operation": "equals" } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.decisionAction }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -598,46 +1109,85 @@
       "name": "ثبت رد سفارش",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-160, 1420],
+      "position": [
+        -160,
+        1420
+      ],
       "parameters": {
         "operation": "update",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["order_id"],
-          "value": { "order_id": "={{ $json.order.order_id }}", "status": "rejected", "reviewed_at": "={{ new Date().toISOString() }}" }
+          "matchingColumns": [
+            "order_id"
+          ],
+          "value": {
+            "order_id": "={{ $json.order.order_id }}",
+            "status": "rejected",
+            "reviewed_at": "={{ new Date().toISOString() }}"
+          }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "tg-notify-rejected",
       "name": "اطلاع رد به مشتری",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [80, 1420],
+      "position": [
+        80,
+        1420
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.order.telegram_user_id }}",
         "text": "رسید پرداختت تأیید نشد. لطفاً با پشتیبانی (@bardiaaSam) در تماس باش."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "sheets-mark-approved",
       "name": "ثبت تأیید سفارش",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [-160, 1220],
+      "position": [
+        -160,
+        1220
+      ],
       "parameters": {
         "operation": "update",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Orders" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        },
         "columns": {
           "mappingMode": "defineBelow",
-          "matchingColumns": ["order_id"],
+          "matchingColumns": [
+            "order_id"
+          ],
           "value": {
             "order_id": "={{ $json.order.order_id }}",
             "status": "delivered",
@@ -646,27 +1196,50 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "sheets-read-product-for-delivery",
       "name": "خواندن محصول برای تحویل",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [80, 1220],
+      "position": [
+        80,
+        1220
+      ],
       "parameters": {
         "operation": "read",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Products" }
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Products"
+        }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
     },
     {
       "id": "code-match-product-delivery",
       "name": "تطبیق محصول تحویلی",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [320, 1220],
+      "position": [
+        320,
+        1220
+      ],
       "parameters": {
         "jsCode": "const order = $('تطبیق سفارش با تصمیم').first().json.order;\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === order.product_slug);\nconst licenseKey = `IRCLU-${order.order_id.replace('ORDER-', '')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;\nconst expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();\n\nreturn [{ json: { order: { ...order, expires_at: expiresAt }, product, licenseKey } }];"
       }
@@ -676,11 +1249,20 @@
       "name": "ثبت لایسنس جدید",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [440, 1220],
+      "position": [
+        440,
+        1220
+      ],
       "parameters": {
         "operation": "append",
-        "documentId": { "mode": "list", "value": "PLACEHOLDER_SPREADSHEET_ID" },
-        "sheetName": { "mode": "name", "value": "Licenses" },
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Licenses"
+        },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
@@ -696,18 +1278,39 @@
           }
         }
       },
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PLACEHOLDER", "name": "Google Sheets (IR-CLU Store)" } }
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
     },
     {
       "id": "if-product-type-app",
       "name": "نوع محصول = اپلیکیشن؟",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [560, 1220],
+      "position": [
+        560,
+        1220
+      ],
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "loose" },
-          "conditions": [{ "leftValue": "={{ $json.product.type }}", "rightValue": "app", "operator": { "type": "string", "operation": "equals" } }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.product.type }}",
+              "rightValue": "app",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
           "combinator": "and"
         }
       }
@@ -717,139 +1320,577 @@
       "name": "تحویل لینک دانلود",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [800, 1140],
+      "position": [
+        800,
+        1140
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.order.telegram_user_id }}",
         "text": "=🎉 پرداخت تأیید شد!\n\nلینک دانلود {{ $json.product.title }}:\n{{ $json.product.file_url }}\n\n🔑 کد لایسنس شما (موقع اولین اجرا وارد کنید):\n{{ $json.licenseKey }}\n\nاشتراک شما به مدت یک ماه فعال است و هر روز به‌صورت خودکار توسط اپلیکیشن بررسی می‌شود."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "tg-deliver-bot-customer",
       "name": "اطلاع راه‌اندازی ربات به مشتری",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [800, 1320],
+      "position": [
+        800,
+        1320
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.order.telegram_user_id }}",
         "text": "=🎉 پرداخت تأیید شد!\n\nچون {{ $json.product.title }} برای هر مشتری جداگانه راه‌اندازی می‌شود، تیم ما ظرف حداکثر ۲۴ ساعت از همین چت با شما تماس می‌گیرد."
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     },
     {
       "id": "tg-notify-admin-setup",
       "name": "اطلاع نیاز به راه‌اندازی دستی",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1040, 1320],
+      "position": [
+        1040,
+        1320
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "PLACEHOLDER_ADMIN_CHAT_ID",
         "text": "=✅ سفارش {{ $json.order.order_id }} تأیید شد — نیاز به راه‌اندازی دستی ربات دارد.\nنیازهای مشتری: {{ $json.order.requirements_summary }}"
       },
-      "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
     }
   ],
   "connections": {
-    "پیام جدید در ربات فروش": { "main": [[{ "node": "تشخیص نوع پیام", "type": "main", "index": 0 }]] },
-    "تشخیص نوع پیام": { "main": [[{ "node": "مسیر بر اساس نوع پیام", "type": "main", "index": 0 }]] },
-    "مسیر بر اساس نوع پیام": {
+    "پیام جدید در ربات فروش": {
       "main": [
-        [{ "node": "ذخیره شماره تلفن", "type": "main", "index": 0 }],
-        [{ "node": "خواندن مشتریان", "type": "main", "index": 0 }],
-        [{ "node": "خواندن سفارش‌ها (رسید)", "type": "main", "index": 0 }],
-        [{ "node": "خواندن سفارش‌ها (تصمیم ادمین)", "type": "main", "index": 0 }],
-        [{ "node": "خواندن وضعیت (پیام آزاد)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "تشخیص نوع پیام",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-
-    "ذخیره شماره تلفن": { "main": [[{ "node": "خواندن وضعیت مشتری", "type": "main", "index": 0 }]] },
-    "خواندن وضعیت مشتری": { "main": [[{ "node": "ادامه دادن بعد از احراز هویت", "type": "main", "index": 0 }]] },
+    "تشخیص نوع پیام": {
+      "main": [
+        [
+          {
+            "node": "مسیر بر اساس نوع پیام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "مسیر بر اساس نوع پیام": {
+      "main": [
+        [
+          {
+            "node": "ذخیره شماره تلفن",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خواندن مشتریان",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خواندن سفارش‌ها (رسید)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خواندن سفارش‌ها (تصمیم ادمین)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خواندن وضعیت (پیام آزاد)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ذخیره شماره تلفن": {
+      "main": [
+        [
+          {
+            "node": "خواندن وضعیت مشتری",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن وضعیت مشتری": {
+      "main": [
+        [
+          {
+            "node": "ادامه دادن بعد از احراز هویت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "ادامه دادن بعد از احراز هویت": {
-      "main": [[
-        { "node": "تأیید ثبت شماره", "type": "main", "index": 0 },
-        { "node": "محصولی در انتظار بود؟", "type": "main", "index": 0 }
-      ]]
+      "main": [
+        [
+          {
+            "node": "تأیید ثبت شماره",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "محصولی در انتظار بود؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "محصولی در انتظار بود؟": {
       "main": [
-        [{ "node": "خواندن محصولات", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "خواندن محصولات",
+            "type": "main",
+            "index": 0
+          }
+        ],
         []
       ]
     },
-
-    "خواندن مشتریان": { "main": [[{ "node": "بررسی احراز هویت", "type": "main", "index": 0 }]] },
-    "بررسی احراز هویت": { "main": [[{ "node": "شماره قبلاً ثبت شده؟", "type": "main", "index": 0 }]] },
+    "خواندن مشتریان": {
+      "main": [
+        [
+          {
+            "node": "بررسی احراز هویت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بررسی احراز هویت": {
+      "main": [
+        [
+          {
+            "node": "شماره قبلاً ثبت شده؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "شماره قبلاً ثبت شده؟": {
       "main": [
-        [{ "node": "خواندن محصولات", "type": "main", "index": 0 }],
-        [{ "node": "ذخیره محصول در انتظار", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "خواندن محصولات",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ذخیره محصول در انتظار",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "ذخیره محصول در انتظار": { "main": [[{ "node": "درخواست شماره تلفن", "type": "main", "index": 0 }]] },
-
-    "خواندن محصولات": { "main": [[{ "node": "پیدا کردن محصول", "type": "main", "index": 0 }]] },
-    "پیدا کردن محصول": { "main": [[{ "node": "محصول پیدا شد؟", "type": "main", "index": 0 }]] },
+    "ذخیره محصول در انتظار": {
+      "main": [
+        [
+          {
+            "node": "درخواست شماره تلفن",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن محصولات": {
+      "main": [
+        [
+          {
+            "node": "پیدا کردن محصول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "پیدا کردن محصول": {
+      "main": [
+        [
+          {
+            "node": "محصول پیدا شد؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "محصول پیدا شد؟": {
       "main": [
-        [{ "node": "ساخت سفارش جدید", "type": "main", "index": 0 }],
-        [{ "node": "محصول پیدا نشد", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "ساخت سفارش جدید",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "محصول پیدا نشد",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "ساخت سفارش جدید": { "main": [[{ "node": "ثبت سفارش (در انتظار نیازها)", "type": "main", "index": 0 }]] },
-    "ثبت سفارش (در انتظار نیازها)": { "main": [[{ "node": "ثبت وضعیت در انتظار نیازها", "type": "main", "index": 0 }]] },
-    "ثبت وضعیت در انتظار نیازها": { "main": [[{ "node": "درخواست توضیح نیازها", "type": "main", "index": 0 }]] },
-
-    "خواندن وضعیت (پیام آزاد)": { "main": [[{ "node": "بررسی انتظار نیازها", "type": "main", "index": 0 }]] },
-    "بررسی انتظار نیازها": { "main": [[{ "node": "در انتظار نیازهاست؟", "type": "main", "index": 0 }]] },
+    "ساخت سفارش جدید": {
+      "main": [
+        [
+          {
+            "node": "ثبت سفارش (در انتظار نیازها)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ثبت سفارش (در انتظار نیازها)": {
+      "main": [
+        [
+          {
+            "node": "ثبت وضعیت در انتظار نیازها",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ثبت وضعیت در انتظار نیازها": {
+      "main": [
+        [
+          {
+            "node": "درخواست توضیح نیازها",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن وضعیت (پیام آزاد)": {
+      "main": [
+        [
+          {
+            "node": "بررسی انتظار نیازها",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بررسی انتظار نیازها": {
+      "main": [
+        [
+          {
+            "node": "در انتظار نیازهاست؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "در انتظار نیازهاست؟": {
       "main": [
-        [{ "node": "خلاصه‌سازی نیازها با OpenAI", "type": "main", "index": 0 }],
-        [{ "node": "پاسخ عمومی / راهنما", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "خلاصه‌سازی نیازها با OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "پاسخ عمومی / راهنما",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "خلاصه‌سازی نیازها با OpenAI": { "main": [[{ "node": "ثبت خلاصه نیازها در سفارش", "type": "main", "index": 0 }]] },
-    "ثبت خلاصه نیازها در سفارش": { "main": [[{ "node": "پاک کردن وضعیت در انتظار", "type": "main", "index": 0 }]] },
-    "پاک کردن وضعیت در انتظار": { "main": [[{ "node": "خواندن سفارش برای نمایش پرداخت", "type": "main", "index": 0 }]] },
-    "خواندن سفارش برای نمایش پرداخت": { "main": [[{ "node": "نمایش اطلاعات پرداخت", "type": "main", "index": 0 }]] },
-
-    "خواندن سفارش‌ها (رسید)": { "main": [[{ "node": "پیدا کردن سفارش در انتظار پرداخت", "type": "main", "index": 0 }]] },
-    "پیدا کردن سفارش در انتظار پرداخت": { "main": [[{ "node": "سفارشی در انتظار پرداخت هست؟", "type": "main", "index": 0 }]] },
+    "خلاصه‌سازی نیازها با OpenAI": {
+      "main": [
+        [
+          {
+            "node": "ثبت خلاصه نیازها در سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ثبت خلاصه نیازها در سفارش": {
+      "main": [
+        [
+          {
+            "node": "پاک کردن وضعیت در انتظار",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "پاک کردن وضعیت در انتظار": {
+      "main": [
+        [
+          {
+            "node": "خواندن سفارش برای نمایش پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن سفارش برای نمایش پرداخت": {
+      "main": [
+        [
+          {
+            "node": "نمایش اطلاعات پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن سفارش‌ها (رسید)": {
+      "main": [
+        [
+          {
+            "node": "پیدا کردن سفارش در انتظار پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "پیدا کردن سفارش در انتظار پرداخت": {
+      "main": [
+        [
+          {
+            "node": "سفارشی در انتظار پرداخت هست؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "سفارشی در انتظار پرداخت هست؟": {
       "main": [
-        [{ "node": "ثبت رسید پرداخت", "type": "main", "index": 0 }],
-        [{ "node": "سفارشی پیدا نشد", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "ثبت رسید پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "سفارشی پیدا نشد",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "ثبت رسید پرداخت": { "main": [[{ "node": "تأیید دریافت رسید به مشتری", "type": "main", "index": 0 }]] },
-    "تأیید دریافت رسید به مشتری": { "main": [[{ "node": "ارسال رسید به ادمین", "type": "main", "index": 0 }]] },
-
-    "خواندن سفارش‌ها (تصمیم ادمین)": { "main": [[{ "node": "تطبیق سفارش با تصمیم", "type": "main", "index": 0 }]] },
-    "تطبیق سفارش با تصمیم": { "main": [[{ "node": "تأیید یا رد؟", "type": "main", "index": 0 }]] },
+    "ثبت رسید پرداخت": {
+      "main": [
+        [
+          {
+            "node": "تأیید دریافت رسید به مشتری",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تأیید دریافت رسید به مشتری": {
+      "main": [
+        [
+          {
+            "node": "ارسال رسید به ادمین",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن سفارش‌ها (تصمیم ادمین)": {
+      "main": [
+        [
+          {
+            "node": "تطبیق سفارش با تصمیم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تطبیق سفارش با تصمیم": {
+      "main": [
+        [
+          {
+            "node": "تأیید یا رد؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "تأیید یا رد؟": {
       "main": [
-        [{ "node": "ثبت تأیید سفارش", "type": "main", "index": 0 }],
-        [{ "node": "ثبت رد سفارش", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "ثبت تأیید سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ثبت رد سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "ثبت رد سفارش": { "main": [[{ "node": "اطلاع رد به مشتری", "type": "main", "index": 0 }]] },
-    "ثبت تأیید سفارش": { "main": [[{ "node": "خواندن محصول برای تحویل", "type": "main", "index": 0 }]] },
-    "خواندن محصول برای تحویل": { "main": [[{ "node": "تطبیق محصول تحویلی", "type": "main", "index": 0 }]] },
-    "تطبیق محصول تحویلی": { "main": [[{ "node": "ثبت لایسنس جدید", "type": "main", "index": 0 }]] },
-    "ثبت لایسنس جدید": { "main": [[{ "node": "نوع محصول = اپلیکیشن؟", "type": "main", "index": 0 }]] },
+    "ثبت رد سفارش": {
+      "main": [
+        [
+          {
+            "node": "اطلاع رد به مشتری",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ثبت تأیید سفارش": {
+      "main": [
+        [
+          {
+            "node": "خواندن محصول برای تحویل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن محصول برای تحویل": {
+      "main": [
+        [
+          {
+            "node": "تطبیق محصول تحویلی",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تطبیق محصول تحویلی": {
+      "main": [
+        [
+          {
+            "node": "ثبت لایسنس جدید",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ثبت لایسنس جدید": {
+      "main": [
+        [
+          {
+            "node": "نوع محصول = اپلیکیشن؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "نوع محصول = اپلیکیشن؟": {
       "main": [
-        [{ "node": "تحویل لینک دانلود", "type": "main", "index": 0 }],
-        [{ "node": "اطلاع راه‌اندازی ربات به مشتری", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "تحویل لینک دانلود",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "اطلاع راه‌اندازی ربات به مشتری",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "اطلاع راه‌اندازی ربات به مشتری": { "main": [[{ "node": "اطلاع نیاز به راه‌اندازی دستی", "type": "main", "index": 0 }]] }
+    "اطلاع راه‌اندازی ربات به مشتری": {
+      "main": [
+        [
+          {
+            "node": "اطلاع نیاز به راه‌اندازی دستی",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" }
+  "settings": {
+    "executionOrder": "v1"
+  }
 }
