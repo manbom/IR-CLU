@@ -17,7 +17,7 @@
       "typeVersion": 2,
       "position": [-1360, 0],
       "parameters": {
-        "jsCode": "const msg = $json.message || {};\nconst chatId = msg.chat?.id;\nconst username = msg.from?.username || \"\";\nconst firstName = msg.from?.first_name || \"\";\nconst text = (msg.text || \"\").trim();\nconst adminChatId = String($env.ADMIN_CHAT_ID);\n\nlet kind = \"free_text\";\nlet slug = null;\nlet decisionAction = null;\nlet decisionOrderId = null;\n\nif (msg.contact) {\n  kind = \"contact\";\n} else if (/^\\/start\\s+\\S+/.test(text)) {\n  kind = \"start_product\";\n  slug = text.match(/^\\/start\\s+(\\S+)/)[1];\n} else if (msg.photo && msg.photo.length) {\n  kind = \"photo_receipt\";\n} else if (String(chatId) === adminChatId && /^(تایید|رد)\\s+(ORDER-\\S+)/.test(text)) {\n  kind = \"admin_decision\";\n  const m = text.match(/^(تایید|رد)\\s+(ORDER-\\S+)/);\n  decisionAction = m[1] === \"تایید\" ? \"approve\" : \"reject\";\n  decisionOrderId = m[2];\n}\n\nconst photo = msg.photo ? msg.photo[msg.photo.length - 1] : null;\n\nreturn [{\n  json: {\n    kind, chatId, username, firstName, text, slug,\n    decisionAction, decisionOrderId,\n    photoFileId: photo ? photo.file_id : null,\n  },\n}];"
+        "jsCode": "const msg = $json.message || {};\nconst chatId = msg.chat?.id;\nconst username = msg.from?.username || \"\";\nconst firstName = msg.from?.first_name || \"\";\nconst text = (msg.text || \"\").trim();\n\n// یکی از دو جایی که باید Chat ID خودت رو جایگزین کنی — راهنمای دقیق توی پیام چت هست\nconst adminChatId = \"PLACEHOLDER_ADMIN_CHAT_ID\";\n\nlet kind = \"free_text\";\nlet slug = null;\nlet decisionAction = null;\nlet decisionOrderId = null;\n\nif (msg.contact) {\n  kind = \"contact\";\n} else if (/^\\/start\\s+\\S+/.test(text)) {\n  kind = \"start_product\";\n  slug = text.match(/^\\/start\\s+(\\S+)/)[1];\n} else if (msg.photo && msg.photo.length) {\n  kind = \"photo_receipt\";\n} else if (String(chatId) === adminChatId && /^(تایید|رد)\\s+(ORDER-\\S+)/.test(text)) {\n  kind = \"admin_decision\";\n  const m = text.match(/^(تایید|رد)\\s+(ORDER-\\S+)/);\n  decisionAction = m[1] === \"تایید\" ? \"approve\" : \"reject\";\n  decisionOrderId = m[2];\n}\n\nconst photo = msg.photo ? msg.photo[msg.photo.length - 1] : null;\n\nreturn [{\n  json: {\n    kind, chatId, username, firstName, text, slug,\n    decisionAction, decisionOrderId,\n    photoFileId: photo ? photo.file_id : null,\n  },\n}];"
       }
     },
     {
@@ -184,14 +184,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "برای ادامه، اول لطفاً شماره تلفنت رو با دکمه زیر به اشتراک بذار 👇",
-        "replyMarkup": "keyboard",
-        "keyboard": {
-          "rows": [
-            { "row": { "buttons": [{ "text": "📱 اشتراک‌گذاری شماره تلفن", "additionalFields": { "requestContact": true } }] } }
-          ]
-        },
-        "additionalFields": { "resize_keyboard": true, "one_time_keyboard": true }
+        "text": "برای ادامه، اول لطفاً شماره تلفنت رو با دکمه زیر به اشتراک بذار 👇"
       },
       "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
     },
@@ -362,22 +355,22 @@
     },
     {
       "id": "http-claude-summarize",
-      "name": "خلاصه‌سازی نیازها با Claude",
+      "name": "خلاصه‌سازی نیازها با OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [-160, 400],
       "parameters": {
         "method": "POST",
-        "url": "https://api.anthropic.com/v1/messages",
+        "url": "https://api.openai.com/v1/chat/completions",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "anthropic-version", "value": "2023-06-01" }, { "name": "content-type", "value": "application/json" }] },
+        "headerParameters": { "parameters": [{ "name": "content-type", "value": "application/json" }] },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({\n  model: \"claude-sonnet-5\",\n  max_tokens: 500,\n  system: \"یک تحلیل‌گر نیازمندی مشتری برای استودیوی اتوماسیون IR-CLU هستی. پیام مشتری را در چند خط خلاصه‌ی فارسی، شفاف و کاربردی برای تیم فنی بازنویسی کن؛ نوع کسب‌وکار، خواسته اصلی، و هر جزئیات مهمی که ذکر کرده را نگه دار. فقط خلاصه را بنویس، بدون مقدمه.\",\n  messages: [{ role: \"user\", content: $json.text }]\n}) }}"
+        "jsonBody": "={{ JSON.stringify({\n  model: \"gpt-4o-mini\",\n  messages: [\n    { role: \"system\", content: \"یک تحلیل‌گر نیازمندی مشتری برای استودیوی اتوماسیون IR-CLU هستی. پیام مشتری را در چند خط خلاصه‌ی فارسی، شفاف و کاربردی برای تیم فنی بازنویسی کن؛ نوع کسب‌وکار، خواسته اصلی، و هر جزئیات مهمی که ذکر کرده را نگه دار. فقط خلاصه را بنویس، بدون مقدمه.\" },\n    { role: \"user\", content: $json.text }\n  ]\n}) }}"
       },
-      "credentials": { "httpHeaderAuth": { "id": "PLACEHOLDER", "name": "Anthropic API Key (x-api-key)" } }
+      "credentials": { "httpHeaderAuth": { "id": "PLACEHOLDER", "name": "OpenAI API Key (Authorization: Bearer)" } }
     },
     {
       "id": "sheets-update-requirements",
@@ -394,7 +387,7 @@
           "matchingColumns": ["order_id"],
           "value": {
             "order_id": "={{ $('بررسی انتظار نیازها').first().json.awaitingOrderId }}",
-            "requirements_summary": "={{ $json.content[0].text }}",
+            "requirements_summary": "={{ $json.choices[0].message.content }}",
             "status": "awaiting_payment"
           }
         }
@@ -442,7 +435,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $('بررسی انتظار نیازها').first().json.chatId }}",
-        "text": "=ممنون، نیازهات ثبت شد ✅\n\nبرای تکمیل سفارش، مبلغ زیر رو کارت‌به‌کارت کن:\n\n💳 شماره کارت: {{ $env.PAYMENT_CARD_NUMBER }}\nبه نام: {{ $env.PAYMENT_CARD_HOLDER }}\nمبلغ: مطابق قیمت محصول (توی پیام قبلی نوشته شد)\n\nبعد از واریز، همین‌جا عکس رسید/فیش واریزی رو بفرست تا تیم ما بررسی و تأیید کنه."
+        "text": "ممنون، نیازهات ثبت شد ✅\n\nبرای تکمیل سفارش، مبلغ رو کارت‌به‌کارت کن:\n\n💳 شماره کارت: PLACEHOLDER_CARD_NUMBER\nبه نام: PLACEHOLDER_CARD_HOLDER\nمبلغ: مطابق قیمت محصول (توی پیام قبلی نوشته شد)\n\nبعد از واریز، همین‌جا عکس رسید/فیش واریزی رو بفرست تا تیم ما بررسی و تأیید کنه."
       },
       "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
     },
@@ -817,11 +810,11 @@
     "بررسی انتظار نیازها": { "main": [[{ "node": "در انتظار نیازهاست؟", "type": "main", "index": 0 }]] },
     "در انتظار نیازهاست؟": {
       "main": [
-        [{ "node": "خلاصه‌سازی نیازها با Claude", "type": "main", "index": 0 }],
+        [{ "node": "خلاصه‌سازی نیازها با OpenAI", "type": "main", "index": 0 }],
         [{ "node": "پاسخ عمومی / راهنما", "type": "main", "index": 0 }]
       ]
     },
-    "خلاصه‌سازی نیازها با Claude": { "main": [[{ "node": "ثبت خلاصه نیازها در سفارش", "type": "main", "index": 0 }]] },
+    "خلاصه‌سازی نیازها با OpenAI": { "main": [[{ "node": "ثبت خلاصه نیازها در سفارش", "type": "main", "index": 0 }]] },
     "ثبت خلاصه نیازها در سفارش": { "main": [[{ "node": "پاک کردن وضعیت در انتظار", "type": "main", "index": 0 }]] },
     "پاک کردن وضعیت در انتظار": { "main": [[{ "node": "خواندن سفارش برای نمایش پرداخت", "type": "main", "index": 0 }]] },
     "خواندن سفارش برای نمایش پرداخت": { "main": [[{ "node": "نمایش اطلاعات پرداخت", "type": "main", "index": 0 }]] },
