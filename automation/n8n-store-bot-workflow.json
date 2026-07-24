@@ -96,8 +96,7 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "ممنون، شماره‌ات ثبت شد ✅",
-        "replyMarkup": "removeKeyboard"
+        "text": "ممنون، شماره‌ات ثبت شد ✅"
       },
       "credentials": { "telegramApi": { "id": "PLACEHOLDER", "name": "Telegram Store Bot" } }
     },
