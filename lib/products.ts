@@ -18,7 +18,7 @@ export type Product = {
 const PRODUCTS_FILE = path.join(process.cwd(), "content/products/products.json");
 
 // Set this once the sales bot exists — see automation/n8n-store-bot-workflow.json
-export const STORE_BOT_USERNAME = "IRCLUStoreBot";
+export const STORE_BOT_USERNAME = "irclubotbot";
 
 export function getAllProducts(): Product[] {
   const raw = fs.readFileSync(PRODUCTS_FILE, "utf8");
