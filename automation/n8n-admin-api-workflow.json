@@ -1,0 +1,279 @@
+{
+  "name": "IR-CLU — API پنل ادمین",
+  "nodes": [
+    {
+      "id": "webhook-admin-panel",
+      "name": "درخواست پنل ادمین",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "admin-panel",
+        "responseMode": "responseNode"
+      }
+    },
+    {
+      "id": "code-check-secret",
+      "name": "بررسی رمز",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const query = $json.query || {};\nconst secret = String(query.secret || '');\n\n// این رمز رو با یه رمز قوی و تصادفی جایگزین کن، و همون رو توی کد صفحه‌ی وب هم بذار\nconst ADMIN_PANEL_SECRET = 'PLACEHOLDER_ADMIN_PANEL_SECRET';\n\nreturn [{ json: { valid: secret.length > 0 && secret === ADMIN_PANEL_SECRET } }];"
+      }
+    },
+    {
+      "id": "if-secret-valid",
+      "name": "رمز درست است؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "respond-unauthorized",
+      "name": "پاسخ غیرمجاز",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}"
+      }
+    },
+    {
+      "id": "sheets-read-customers-admin",
+      "name": "خواندن مشتریان (ادمین)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        -100
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sheets-read-orders-admin",
+      "name": "خواندن سفارش‌ها (ادمین)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        -100
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "sheets-read-licenses-admin",
+      "name": "خواندن لایسنس‌ها (ادمین)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        -100
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Licenses"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "code-build-admin-response",
+      "name": "ساخت پاسخ پنل ادمین",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const customers = $('خواندن مشتریان (ادمین)').all().map((i) => i.json);\nconst orders = $('خواندن سفارش‌ها (ادمین)').all().map((i) => i.json);\nconst licenses = $('خواندن لایسنس‌ها (ادمین)').all().map((i) => i.json);\n\nconst result = customers\n  .map((c) => {\n    let chatHistory = [];\n    try {\n      chatHistory = JSON.parse(c.chat_history || '[]');\n    } catch (e) {\n      chatHistory = [];\n    }\n    if (!Array.isArray(chatHistory)) chatHistory = [];\n\n    const custOrders = orders.filter((o) => String(o.telegram_user_id) === String(c.telegram_user_id));\n    const custLicenses = licenses.filter((l) => String(l.telegram_user_id) === String(c.telegram_user_id));\n\n    return {\n      chatId: c.telegram_user_id,\n      username: c.username || '',\n      phone: c.phone || '',\n      pendingState: c.pending_state || '',\n      createdAt: c.created_at || '',\n      chatHistory,\n      orders: custOrders,\n      licenses: custLicenses,\n    };\n  })\n  .filter((c) => c.chatId)\n  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());\n\nconst now = Date.now();\nconst threeDaysMs = 3 * 24 * 60 * 60 * 1000;\n\nconst stats = {\n  pendingReview: orders.filter((o) => o.status === 'pending_review').length,\n  awaitingPayment: orders.filter((o) => o.status === 'awaiting_payment').length,\n  deliveredThisMonth: orders.filter((o) => {\n    if (o.status !== 'delivered' || !o.reviewed_at) return false;\n    const d = new Date(o.reviewed_at);\n    const n = new Date();\n    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();\n  }).length,\n  expiringSoon: orders.filter((o) => {\n    if (o.status !== 'delivered' || !o.expires_at) return false;\n    const diff = new Date(o.expires_at).getTime() - now;\n    return diff > 0 && diff <= threeDaysMs;\n  }).length,\n};\n\nreturn [{ json: { customers: result, stats } }];"
+      }
+    },
+    {
+      "id": "respond-ok",
+      "name": "پاسخ موفق",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        -100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "درخواست پنل ادمین": {
+      "main": [
+        [
+          {
+            "node": "بررسی رمز",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "بررسی رمز": {
+      "main": [
+        [
+          {
+            "node": "رمز درست است؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "رمز درست است؟": {
+      "main": [
+        [
+          {
+            "node": "خواندن مشتریان (ادمین)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "پاسخ غیرمجاز",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن مشتریان (ادمین)": {
+      "main": [
+        [
+          {
+            "node": "خواندن سفارش‌ها (ادمین)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن سفارش‌ها (ادمین)": {
+      "main": [
+        [
+          {
+            "node": "خواندن لایسنس‌ها (ادمین)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن لایسنس‌ها (ادمین)": {
+      "main": [
+        [
+          {
+            "node": "ساخت پاسخ پنل ادمین",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ساخت پاسخ پنل ادمین": {
+      "main": [
+        [
+          {
+            "node": "پاسخ موفق",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

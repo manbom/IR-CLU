@@ -12,7 +12,8 @@
       ],
       "parameters": {
         "updates": [
-          "message"
+          "message",
+          "callback_query"
         ]
       },
       "credentials": {
@@ -32,7 +33,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const msg = $json.message || {};\nconst chatId = msg.chat?.id;\nconst username = msg.from?.username || \"\";\nconst firstName = msg.from?.first_name || \"\";\nconst text = (msg.text || \"\").trim();\n\n// یکی از دو جایی که باید Chat ID خودت رو جایگزین کنی — راهنمای دقیق توی پیام چت هست\nconst adminChatId = \"PLACEHOLDER_ADMIN_CHAT_ID\";\n\nlet kind = \"free_text\";\nlet slug = null;\nlet decisionAction = null;\nlet decisionOrderId = null;\n\nif (msg.contact) {\n  kind = \"contact\";\n} else if (/^\\/start\\s+\\S+/.test(text)) {\n  kind = \"start_product\";\n  slug = text.match(/^\\/start\\s+(\\S+)/)[1];\n} else if (msg.photo && msg.photo.length) {\n  kind = \"photo_receipt\";\n} else if (String(chatId) === adminChatId && /^(تایید|رد)\\s+(ORDER-\\S+)/.test(text)) {\n  kind = \"admin_decision\";\n  const m = text.match(/^(تایید|رد)\\s+(ORDER-\\S+)/);\n  decisionAction = m[1] === \"تایید\" ? \"approve\" : \"reject\";\n  decisionOrderId = m[2];\n}\n\nconst photo = msg.photo ? msg.photo[msg.photo.length - 1] : null;\n\nreturn [{\n  json: {\n    kind, chatId, username, firstName, text, slug,\n    decisionAction, decisionOrderId,\n    photoFileId: photo ? photo.file_id : null,\n  },\n}];"
+        "jsCode": "const msg = $json.message || {};\nconst cq = $json.callback_query || null;\n\n// اگه یه روز خواستی چند نفر دیگه هم بتونن سفارش‌ها رو تایید/رد کنن، آی‌دی‌شون رو هم اینجا اضافه کن\nconst adminChatId = \"6452519019\";\n\nlet kind = \"free_text\";\nlet chatId, username, firstName, text;\nlet slug = null;\nlet decisionAction = null;\nlet decisionOrderId = null;\n\nif (cq) {\n  // دکمه‌ی تایید/رد زیر عکس رسید فشرده شده\n  chatId = cq.from?.id;\n  username = cq.from?.username || \"\";\n  firstName = cq.from?.first_name || \"\";\n  text = \"\";\n  const m = (cq.data || \"\").match(/^(approve|reject):(ORDER-\\S+)$/);\n  if (String(chatId) === adminChatId && m) {\n    kind = \"admin_decision\";\n    decisionAction = m[1];\n    decisionOrderId = m[2];\n  }\n} else {\n  chatId = msg.chat?.id;\n  username = msg.from?.username || \"\";\n  firstName = msg.from?.first_name || \"\";\n  text = (msg.text || \"\").trim();\n\n  if (msg.contact) {\n    kind = \"contact\";\n  } else if (String(chatId) === adminChatId && text === \"/start\") {\n    // ادمین وارد مسیر عادی مشتری (درخواست شماره و ...) نمی‌شه، منوی خودش رو می‌بینه\n    kind = \"admin_menu\";\n  } else if (/^\\/start\\s+\\S+/.test(text)) {\n    kind = \"start_product\";\n    slug = text.match(/^\\/start\\s+(\\S+)/)[1];\n  } else if (text === \"/start\") {\n    kind = \"start_product\";\n    slug = null;\n  } else if (msg.photo && msg.photo.length) {\n    kind = \"photo_receipt\";\n  } else if (String(chatId) === adminChatId && /^(تایید|رد)\\s+(ORDER-\\S+)/.test(text)) {\n    kind = \"admin_decision\";\n    const m2 = text.match(/^(تایید|رد)\\s+(ORDER-\\S+)/);\n    decisionAction = m2[1] === \"تایید\" ? \"approve\" : \"reject\";\n    decisionOrderId = m2[2];\n  }\n}\n\nconst photo = msg.photo ? msg.photo[msg.photo.length - 1] : null;\nconst phone = msg.contact ? msg.contact.phone_number : null;\n\nreturn [{\n  json: {\n    kind, chatId, username, firstName, text, slug,\n    decisionAction, decisionOrderId,\n    photoFileId: photo ? photo.file_id : null,\n    phone,\n  },\n}];"
       }
     },
     {
@@ -126,10 +127,39 @@
                 ]
               },
               "outputKey": "free_text"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.kind }}",
+                    "rightValue": "admin_menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ]
+              },
+              "outputKey": "admin_menu"
             }
           ]
         },
         "options": {}
+      }
+    },
+    {
+      "id": "shape-save-phone",
+      "name": "آماده‌سازی ردیف مشتری (شماره)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        -700
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    telegram_user_id: t.chatId,\n    username: t.username,\n    phone: t.phone,\n    created_at: new Date().toISOString(),\n  },\n}];"
       }
     },
     {
@@ -139,7 +169,7 @@
       "typeVersion": 4.5,
       "position": [
         -880,
-        -600
+        -700
       ],
       "parameters": {
         "operation": "appendOrUpdate",
@@ -152,16 +182,11 @@
           "value": "Customers"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "telegram_user_id"
-          ],
-          "value": {
-            "telegram_user_id": "={{ $json.chatId }}",
-            "username": "={{ $json.username }}",
-            "phone": "={{ $json.message.contact.phone_number }}",
-            "created_at": "={{ new Date().toISOString() }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -178,7 +203,7 @@
       "typeVersion": 4.5,
       "position": [
         -640,
-        -600
+        -700
       ],
       "parameters": {
         "operation": "read",
@@ -206,10 +231,10 @@
       "typeVersion": 2,
       "position": [
         -400,
-        -600
+        -700
       ],
       "parameters": {
-        "jsCode": "const chatId = $('تشخیص نوع پیام').first().json.chatId;\nconst username = $('تشخیص نوع پیام').first().json.username;\nconst firstName = $('تشخیص نوع پیام').first().json.firstName;\n\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_product:(.+)$/);\n\nreturn [{\n  json: { chatId, username, firstName, resumeSlug: m ? m[1] : null },\n}];"
+        "jsCode": "const ctx = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(ctx.chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_product:(.+)$/);\n\nreturn [{\n  json: {\n    chatId: ctx.chatId,\n    username: ctx.username,\n    firstName: ctx.firstName,\n    resumeSlug: m ? m[1] : null,\n  },\n}];"
       }
     },
     {
@@ -219,13 +244,20 @@
       "typeVersion": 1.2,
       "position": [
         -160,
-        -700
+        -800
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "ممنون، شماره‌ات ثبت شد ✅"
+        "text": "ممنون، شماره‌ات ثبت شد ✅",
+        "replyMarkup": "replyKeyboardRemove",
+        "replyKeyboardRemove": {
+          "selective": false
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -241,7 +273,7 @@
       "typeVersion": 2.2,
       "position": [
         -160,
-        -500
+        -600
       ],
       "parameters": {
         "conditions": {
@@ -261,6 +293,31 @@
             }
           ],
           "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-invite-chat",
+      "name": "دعوت به گفتگو",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        -500
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=سلام {{ $json.firstName }} 👋 خوش اومدی!\nهر سوالی درباره‌ی خدمات و محصولات IR-CLU داری همینجا بپرس، در خدمتتم.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
         }
       }
     },
@@ -302,7 +359,7 @@
         -200
       ],
       "parameters": {
-        "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(t.chatId));\n\nreturn [{\n  json: { ...t, hasPhone: !!(row && row.phone) },\n}];"
+        "jsCode": "const ctx = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(ctx.chatId));\n\nreturn [{ json: { ...ctx, hasPhone: !!(row && row.phone) } }];"
       }
     },
     {
@@ -337,6 +394,19 @@
       }
     },
     {
+      "id": "shape-save-pending-slug",
+      "name": "آماده‌سازی ردیف مشتری (محصول در انتظار)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    telegram_user_id: t.chatId,\n    pending_state: t.slug ? ('awaiting_product:' + t.slug) : '',\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-save-pending-slug",
       "name": "ذخیره محصول در انتظار",
       "type": "n8n-nodes-base.googleSheets",
@@ -356,14 +426,11 @@
           "value": "Customers"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "telegram_user_id"
-          ],
-          "value": {
-            "telegram_user_id": "={{ $json.chatId }}",
-            "pending_state": "=awaiting_product:{{ $json.slug }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -374,19 +441,107 @@
       }
     },
     {
+      "id": "code-prep-phone-request",
+      "name": "آماده‌سازی درخواست شماره",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -100
+      ],
+      "parameters": {
+        "jsCode": "const ctx = $('بررسی احراز هویت').first().json;\nreturn [{ json: { chatId: ctx.chatId, username: ctx.username, firstName: ctx.firstName } }];"
+      }
+    },
+    {
       "id": "tg-request-phone",
       "name": "درخواست شماره تلفن",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        80,
+        320,
         -100
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "برای ادامه، اول لطفاً شماره تلفنت رو با دکمه زیر به اشتراک بذار 👇"
+        "text": "برای استفاده از خدمات ما، لطفاً شماره تلفنت رو با دکمه زیر بفرست 👇",
+        "replyMarkup": "replyKeyboard",
+        "replyKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📱 ارسال شماره تماس",
+                    "additionalFields": {
+                      "request_contact": true
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
+    },
+    {
+      "id": "if-has-slug",
+      "name": "محصولی خواسته بود؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -260
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.slug }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-welcome-no-product",
+      "name": "خوش‌آمدگویی (بدون محصول)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        -340
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=سلام {{ $json.firstName }} 👋 خوش اومدی، شماره‌ت قبلاً ثبت شده ✅\nهر سوالی درباره‌ی خدمات ما داری بپرس، یا از صفحه‌ی فروشگاه سایت (irclu.com/store) روی دکمه‌ی «خرید در تلگرام» همون محصول بزن.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -433,7 +588,7 @@
         100
       ],
       "parameters": {
-        "jsCode": "const slug = $json.slug || $json.resumeSlug;\nconst chatId = $json.chatId;\nconst username = $json.username;\n\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === slug && String(r.active).toLowerCase() === 'true');\n\nreturn [{ json: { found: !!product, chatId, username, slug, product: product || null } }];"
+        "jsCode": "let ctx;\ntry {\n  ctx = $('ادامه دادن بعد از احراز هویت').first().json;\n} catch (e) {\n  ctx = $('بررسی احراز هویت').first().json;\n}\n\nconst slug = ctx.slug || ctx.resumeSlug;\nconst chatId = ctx.chatId;\nconst username = ctx.username;\n\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === slug && String(r.active).toLowerCase() === 'true');\n\nreturn [{ json: { found: !!product, chatId, username, slug, product: product || null } }];"
       }
     },
     {
@@ -480,7 +635,10 @@
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "این محصول در دسترس نیست. از صفحه‌ی فروشگاه (irclu.com/store) دوباره امتحان کن."
+        "text": "این محصول در دسترس نیست. از صفحه‌ی فروشگاه (irclu.com/store) دوباره امتحان کن.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -503,6 +661,19 @@
       }
     },
     {
+      "id": "shape-append-order",
+      "name": "آماده‌سازی ردیف سفارش",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -20
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    order_id: t.orderId,\n    telegram_user_id: t.chatId,\n    telegram_username: t.username,\n    product_slug: t.slug,\n    amount: t.product.price,\n    requirements_summary: '',\n    status: 'awaiting_requirements',\n    receipt_file_id: '',\n    created_at: new Date().toISOString(),\n    reviewed_at: '',\n    expires_at: '',\n    renewal_notified: 'false',\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-append-order",
       "name": "ثبت سفارش (در انتظار نیازها)",
       "type": "n8n-nodes-base.googleSheets",
@@ -522,21 +693,8 @@
           "value": "Orders"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "order_id": "={{ $json.orderId }}",
-            "telegram_user_id": "={{ $json.chatId }}",
-            "telegram_username": "={{ $json.username }}",
-            "product_slug": "={{ $json.slug }}",
-            "amount": "={{ $json.product.price }}",
-            "requirements_summary": "",
-            "status": "awaiting_requirements",
-            "receipt_file_id": "",
-            "created_at": "={{ new Date().toISOString() }}",
-            "reviewed_at": "",
-            "expires_at": "",
-            "renewal_notified": "false"
-          }
+          "mappingMode": "autoMapInputData",
+          "value": {}
         }
       },
       "credentials": {
@@ -544,6 +702,19 @@
           "id": "PLACEHOLDER",
           "name": "Google Sheets (IR-CLU Store)"
         }
+      }
+    },
+    {
+      "id": "shape-pending-requirements",
+      "name": "آماده‌سازی ردیف مشتری (در انتظار نیازها)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        -20
+      ],
+      "parameters": {
+        "jsCode": "const t = $('ساخت سفارش جدید').first().json;\nreturn [{\n  json: {\n    telegram_user_id: t.chatId,\n    pending_state: 'awaiting_requirements:' + t.orderId,\n  },\n}];"
       }
     },
     {
@@ -566,14 +737,11 @@
           "value": "Customers"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "telegram_user_id"
-          ],
-          "value": {
-            "telegram_user_id": "={{ $json.chatId }}",
-            "pending_state": "=awaiting_requirements:{{ $json.orderId }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -595,8 +763,11 @@
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $json.chatId }}",
-        "text": "=✅ {{ $json.product.title }}\nقیمت: {{ Number($json.product.price).toLocaleString('fa-IR') }} تومان (ماهانه)\n\nحالا با زبان خودت برام بنویس دقیقاً چه نیازی داری (نوع کسب‌وکار، چه کاری باید انجام بشه، هر جزئیات مهمی). هوش مصنوعی ما همین الان خلاصه‌اش می‌کنه و می‌فرسته پیش تیم ما."
+        "chatId": "={{ $('ساخت سفارش جدید').first().json.chatId }}",
+        "text": "=✅ {{ $('ساخت سفارش جدید').first().json.product.title }}\nقیمت: {{ Number($('ساخت سفارش جدید').first().json.product.price).toLocaleString('fa-IR') }} تومان (ماهانه)\n\nحالا با زبان خودت برام بنویس دقیقاً چه نیازی داری (نوع کسب‌وکار، چه کاری باید انجام بشه، هر جزئیات مهمی). هوش مصنوعی ما همین الان خلاصه‌اش می‌کنه و می‌فرسته پیش تیم ما.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -607,7 +778,7 @@
     },
     {
       "id": "sheets-read-customer-freetext",
-      "name": "خواندن وضعیت (پیام آزاد)",
+      "name": "خواندن وضعیت مشتری (پیام آزاد)",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
@@ -635,7 +806,7 @@
     },
     {
       "id": "code-check-awaiting",
-      "name": "بررسی انتظار نیازها",
+      "name": "بررسی وضعیت مشتری (پیام آزاد)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
@@ -643,7 +814,7 @@
         500
       ],
       "parameters": {
-        "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(t.chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_requirements:(.+)$/);\n\nreturn [{\n  json: { ...t, awaitingOrderId: m ? m[1] : null },\n}];"
+        "jsCode": "const ctx = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst row = rows.find((r) => String(r.telegram_user_id) === String(ctx.chatId));\nconst pending = row?.pending_state || \"\";\nconst m = pending.match(/^awaiting_requirements:(.+)$/);\n\nreturn [{\n  json: {\n    ...ctx,\n    hasPhone: !!(row && row.phone),\n    awaitingOrderId: m ? m[1] : null,\n    chatHistory: row?.chat_history || \"[]\",\n  },\n}];"
       }
     },
     {
@@ -677,8 +848,8 @@
       }
     },
     {
-      "id": "http-claude-summarize",
-      "name": "خلاصه‌سازی نیازها با OpenAI",
+      "id": "http-openai-summarize",
+      "name": "خلاصه‌سازی نیازها با هوش مصنوعی",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -711,6 +882,19 @@
       }
     },
     {
+      "id": "shape-update-requirements",
+      "name": "آماده‌سازی خلاصه نیازها",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const ctx = $('بررسی وضعیت مشتری (پیام آزاد)').first().json;\nconst summary = $json.choices[0].message.content;\nreturn [{\n  json: {\n    order_id: ctx.awaitingOrderId,\n    requirements_summary: summary,\n    status: 'awaiting_payment',\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-update-requirements",
       "name": "ثبت خلاصه نیازها در سفارش",
       "type": "n8n-nodes-base.googleSheets",
@@ -730,15 +914,11 @@
           "value": "Orders"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "order_id"
-          ],
-          "value": {
-            "order_id": "={{ $('بررسی انتظار نیازها').first().json.awaitingOrderId }}",
-            "requirements_summary": "={{ $json.choices[0].message.content }}",
-            "status": "awaiting_payment"
-          }
+          ]
         }
       },
       "credentials": {
@@ -746,6 +926,19 @@
           "id": "PLACEHOLDER",
           "name": "Google Sheets (IR-CLU Store)"
         }
+      }
+    },
+    {
+      "id": "shape-clear-pending",
+      "name": "آماده‌سازی پاک کردن وضعیت",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const ctx = $('بررسی وضعیت مشتری (پیام آزاد)').first().json;\nreturn [{\n  json: {\n    telegram_user_id: ctx.chatId,\n    pending_state: '',\n  },\n}];"
       }
     },
     {
@@ -768,14 +961,11 @@
           "value": "Customers"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "telegram_user_id"
-          ],
-          "value": {
-            "telegram_user_id": "={{ $('بررسی انتظار نیازها').first().json.chatId }}",
-            "pending_state": ""
-          }
+          ]
         }
       },
       "credentials": {
@@ -814,6 +1004,19 @@
       "alwaysOutputData": true
     },
     {
+      "id": "code-find-order-for-payment",
+      "name": "پیدا کردن سفارش برای نمایش پرداخت",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        400
+      ],
+      "parameters": {
+        "jsCode": "const ctx = $('بررسی وضعیت مشتری (پیام آزاد)').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => r.order_id === ctx.awaitingOrderId);\n\nreturn [{ json: { chatId: ctx.chatId, order: order || null } }];"
+      }
+    },
+    {
       "id": "tg-show-payment-info",
       "name": "نمایش اطلاعات پرداخت",
       "type": "n8n-nodes-base.telegram",
@@ -825,8 +1028,11 @@
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $('بررسی انتظار نیازها').first().json.chatId }}",
-        "text": "ممنون، نیازهات ثبت شد ✅\n\nبرای تکمیل سفارش، مبلغ رو کارت‌به‌کارت کن:\n\n💳 شماره کارت: PLACEHOLDER_CARD_NUMBER\nبه نام: PLACEHOLDER_CARD_HOLDER\nمبلغ: مطابق قیمت محصول (توی پیام قبلی نوشته شد)\n\nبعد از واریز، همین‌جا عکس رسید/فیش واریزی رو بفرست تا تیم ما بررسی و تأیید کنه."
+        "chatId": "={{ $json.chatId }}",
+        "text": "=ممنون، نیازهات ثبت شد ✅\n\nبرای تکمیل سفارش، مبلغ رو کارت‌به‌کارت کن:\n\n💳 شماره کارت: PLACEHOLDER_CARD_NUMBER\nبه نام: PLACEHOLDER_CARD_HOLDER\nمبلغ: {{ Number($json.order.amount).toLocaleString('fa-IR') }} تومان\n\nبعد از واریز، همین‌جا عکس رسید/فیش واریزی رو بفرست تا تیم ما بررسی و تأیید کنه.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -836,24 +1042,165 @@
       }
     },
     {
-      "id": "tg-generic-help",
-      "name": "پاسخ عمومی / راهنما",
+      "id": "if-has-phone-freetext",
+      "name": "شماره ثبت شده؟ (پیام آزاد)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        700
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hasPhone }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "code-build-ai-chat",
+      "name": "ساخت پیام گفتگو با هوش مصنوعی",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        800
+      ],
+      "parameters": {
+        "jsCode": "// ============================================================\n// فقط همین بخش (SALES_KNOWLEDGE) رو ویرایش کن تا محتوای فروش و\n// معرفی‌ای که هوش مصنوعی موقع چت با مشتری‌های جدید ازش استفاده\n// می‌کنه عوض بشه. بقیه‌ی این کد رو دست نزن.\n// ============================================================\nconst SALES_KNOWLEDGE = `\nتو دستیار فروش استودیوی اتوماسیون IR-CLU هستی و داری توی تلگرام با یک مشتری بالقوه چت می‌کنی.\n\nدرباره‌ی IR-CLU:\n- IR-CLU اپلیکیشن‌ها و ربات‌های آماده برای اتوماسیون کسب‌وکار می‌سازد و با اشتراک ماهانه از طریق همین ربات تلگرام می‌فروشد.\n- محصول اصلی: سناریو (Senaryo) — یک اپلیکیشن دسکتاپ ویندوز که یک موضوع می‌گیرد، در یوتیوب و اینستاگرام دنبال ویدیوهای واقعاً وایرال‌شده‌ی ایرانیِ مرتبط می‌گردد، با هوش مصنوعی تحلیل می‌کند دقیقاً چرا وایرال شده‌اند، و چند ایده‌ی کاملاً جدید و آماده‌ی فیلم‌برداری (سناریوی کامل، شات‌لیست، کپشن، هشتگ) تولید می‌کند؛ عملکرد واقعی پست منتشرشده را هم بعداً می‌سنجد و می‌گوید کدام الگو واقعاً جواب داد.\n- هر محصول پرداخت کارت‌به‌کارت دارد؛ بعد از تایید تیم، لایسنس/دسترسی فوری صادر می‌شود.\n\nوظیفه‌ی تو:\n- با لحن دوستانه، فارسی و حرفه‌ای صحبت کن.\n- نیاز واقعی مشتری رو بفهم و نشون بده IR-CLU چطور اون مشکل رو حل می‌کنه.\n- هیچ‌وقت قیمت دقیق قطعی اعلام نکن مگر مطمئن باشی؛ برای قیمت و شروع خرید مشتری رو به صفحه‌ی فروشگاه سایت (irclu.com/store) هدایت کن تا روی «خرید در تلگرام» همون محصول بزنه.\n- اگه مشتری درباره‌ی وضعیت سفارش، لایسنس، یا پرداختش پرسید، هیچ‌وقت جزئیات فرضی نساز (مثل ایمیل، حساب کاربری سایت، لینک ورود، یا هر چیز دیگه‌ای که مطمئن نیستی وجود داره) — فقط بگو که همین‌جا توی همین چت، بعد از بررسی رسید، لایسنس/پاسخ براش ارسال می‌شه.\n- پاسخ‌ها کوتاه و مفید باشن (حداکثر ۴ تا ۵ جمله)، از تکرار مصنوعی و شعار خالی خودداری کن.\n`.trim();\n\nconst MAX_HISTORY = 6; // حداکثر ۳ تبادل رفت‌وبرگشت (۶ پیام) به یاد سپرده می‌شه\n\nconst t = $json;\nlet history = [];\ntry {\n  history = JSON.parse(t.chatHistory || \"[]\");\n} catch (e) {\n  history = [];\n}\nif (!Array.isArray(history)) history = [];\nhistory = history.slice(-MAX_HISTORY);\n\nconst messages = [\n  { role: \"system\", content: SALES_KNOWLEDGE },\n  ...history,\n  { role: \"user\", content: t.text },\n];\n\nreturn [{ json: { chatId: t.chatId, text: t.text, historyBeforeReply: history, messages } }];"
+      }
+    },
+    {
+      "id": "http-openai-chat",
+      "name": "چت فروش با هوش مصنوعی",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        800
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"gpt-4o-mini\", messages: $json.messages }) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLACEHOLDER",
+          "name": "OpenAI API Key (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "id": "code-finalize-chat-reply",
+      "name": "آماده‌سازی پاسخ و تاریخچه گفتگو",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        800
+      ],
+      "parameters": {
+        "jsCode": "const ctx = $('ساخت پیام گفتگو با هوش مصنوعی').first().json;\nconst replyText = $json.choices[0].message.content;\n\nconst newHistory = [\n  ...ctx.historyBeforeReply,\n  { role: 'user', content: ctx.text },\n  { role: 'assistant', content: replyText },\n].slice(-6);\n\nreturn [{\n  json: {\n    chatId: ctx.chatId,\n    replyText,\n    chat_history: JSON.stringify(newHistory),\n  },\n}];"
+      }
+    },
+    {
+      "id": "tg-send-ai-reply",
+      "name": "ارسال پاسخ هوش مصنوعی به مشتری",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -160,
-        620
+        800,
+        720
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "=سلام {{ $json.firstName }} 👋\nبرای خرید هر محصول، از صفحه‌ی فروشگاه سایت (irclu.com/store) روی دکمه‌ی «خرید در تلگرام» همون محصول بزن.\nهر سؤالی هم درباره خدمات ما داری، همینجا بپرس."
+        "text": "={{ $json.replyText }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
           "id": "PLACEHOLDER",
           "name": "Telegram Store Bot"
+        }
+      }
+    },
+    {
+      "id": "shape-chat-history",
+      "name": "آماده‌سازی ردیف تاریخچه گفتگو",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        900
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    telegram_user_id: t.chatId,\n    chat_history: t.chat_history,\n  },\n}];"
+      }
+    },
+    {
+      "id": "sheets-save-chat-history",
+      "name": "ذخیره تاریخچه گفتگو",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        900
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Customers"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "telegram_user_id"
+          ]
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
         }
       }
     },
@@ -864,7 +1211,7 @@
       "typeVersion": 4.5,
       "position": [
         -880,
-        900
+        1100
       ],
       "parameters": {
         "operation": "read",
@@ -892,10 +1239,10 @@
       "typeVersion": 2,
       "position": [
         -640,
-        900
+        1100
       ],
       "parameters": {
-        "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => String(r.telegram_user_id) === String(t.chatId) && r.status === 'awaiting_payment');\n\nreturn [{ json: { ...t, order: order || null } }];"
+        "jsCode": "const ctx = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => String(r.telegram_user_id) === String(ctx.chatId) && r.status === 'awaiting_payment');\n\nreturn [{ json: { ...ctx, order: order || null } }];"
       }
     },
     {
@@ -905,7 +1252,7 @@
       "typeVersion": 2.2,
       "position": [
         -400,
-        900
+        1100
       ],
       "parameters": {
         "conditions": {
@@ -935,13 +1282,16 @@
       "typeVersion": 1.2,
       "position": [
         -160,
-        1020
+        1220
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
         "chatId": "={{ $json.chatId }}",
-        "text": "سفارش در انتظار پرداختی از تو پیدا نکردم. از صفحه‌ی فروشگاه دوباره شروع کن."
+        "text": "سفارش در انتظار پرداختی از تو پیدا نکردم. از صفحه‌ی فروشگاه دوباره شروع کن.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -951,13 +1301,26 @@
       }
     },
     {
+      "id": "shape-mark-receipt",
+      "name": "آماده‌سازی به‌روزرسانی رسید",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        1020
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    order_id: t.order.order_id,\n    status: 'pending_review',\n    receipt_file_id: $('تشخیص نوع پیام').first().json.photoFileId,\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-mark-receipt-received",
       "name": "ثبت رسید پرداخت",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
         -160,
-        820
+        1020
       ],
       "parameters": {
         "operation": "update",
@@ -970,15 +1333,11 @@
           "value": "Orders"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "order_id"
-          ],
-          "value": {
-            "order_id": "={{ $json.order.order_id }}",
-            "status": "pending_review",
-            "receipt_file_id": "={{ $('تشخیص نوع پیام').first().json.photoFileId }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -995,13 +1354,16 @@
       "typeVersion": 1.2,
       "position": [
         80,
-        820
+        1020
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $json.chatId }}",
-        "text": "رسیدت رسید ✅ تیم ما ظرف چند ساعت بررسی می‌کنه و بهت اطلاع می‌ده."
+        "chatId": "={{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.chatId }}",
+        "text": "رسیدت رسید ✅ تیم ما ظرف چند ساعت بررسی می‌کنه و بهت اطلاع می‌ده.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1017,14 +1379,40 @@
       "typeVersion": 1.2,
       "position": [
         320,
-        820
+        1020
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendPhoto",
-        "chatId": "PLACEHOLDER_ADMIN_CHAT_ID",
-        "fileId": "={{ $('تشخیص نوع پیام').first().json.photoFileId }}",
-        "caption": "=💳 رسید پرداخت جدید\nسفارش: {{ $json.order.order_id }}\nمحصول: {{ $json.order.product_slug }}\nمشتری: @{{ $json.order.telegram_username }}\nمبلغ: {{ Number($json.order.amount).toLocaleString('fa-IR') }} تومان\nنیازها: {{ $json.order.requirements_summary }}\n\nبرای تأیید بفرست:\nتایید {{ $json.order.order_id }}\nبرای رد بفرست:\nرد {{ $json.order.order_id }}"
+        "chatId": "6452519019",
+        "file": "={{ $('تشخیص نوع پیام').first().json.photoFileId }}",
+        "caption": "=💳 رسید پرداخت جدید\nسفارش: {{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.order_id }}\nمحصول: {{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.product_slug }}\nمشتری: @{{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.telegram_username }}\nمبلغ: {{ Number($('پیدا کردن سفارش در انتظار پرداخت').first().json.order.amount).toLocaleString('fa-IR') }} تومان\nنیازها: {{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.requirements_summary }}\n\n(یا اگه دکمه‌ها کار نکرد، بنویس: تایید {{ $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.order_id }})",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ تایید و ارسال لایسنس",
+                    "additionalFields": {
+                      "callback_data": "={{ 'approve:' + $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.order_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ رد کردن",
+                    "additionalFields": {
+                      "callback_data": "={{ 'reject:' + $('پیدا کردن سفارش در انتظار پرداخت').first().json.order.order_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1040,7 +1428,7 @@
       "typeVersion": 4.5,
       "position": [
         -880,
-        1300
+        1500
       ],
       "parameters": {
         "operation": "read",
@@ -1068,10 +1456,65 @@
       "typeVersion": 2,
       "position": [
         -640,
-        1300
+        1500
       ],
       "parameters": {
-        "jsCode": "const t = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => r.order_id === t.decisionOrderId);\n\nreturn [{ json: { ...t, order: order || null } }];"
+        "jsCode": "const ctx = $('تشخیص نوع پیام').first().json;\nconst rows = $input.all().map((i) => i.json);\nconst order = rows.find((r) => r.order_id === ctx.decisionOrderId);\n\nreturn [{ json: { ...ctx, order: order || null } }];"
+      }
+    },
+    {
+      "id": "if-already-processed",
+      "name": "قبلاً پردازش شده؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -560,
+        1500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.order.status }}",
+              "rightValue": "pending_review",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-already-processed",
+      "name": "اطلاع سفارش قبلاً پردازش‌شده",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        1580
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=این سفارش ({{ $json.order.order_id }}) قبلاً پردازش شده — وضعیت فعلی: {{ $json.order.status }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
       }
     },
     {
@@ -1081,7 +1524,7 @@
       "typeVersion": 2.2,
       "position": [
         -400,
-        1300
+        1500
       ],
       "parameters": {
         "conditions": {
@@ -1105,13 +1548,26 @@
       }
     },
     {
+      "id": "shape-mark-rejected",
+      "name": "آماده‌سازی رد سفارش",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        1620
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    order_id: t.order.order_id,\n    status: 'rejected',\n    reviewed_at: new Date().toISOString(),\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-mark-rejected",
       "name": "ثبت رد سفارش",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
         -160,
-        1420
+        1620
       ],
       "parameters": {
         "operation": "update",
@@ -1124,15 +1580,11 @@
           "value": "Orders"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "order_id"
-          ],
-          "value": {
-            "order_id": "={{ $json.order.order_id }}",
-            "status": "rejected",
-            "reviewed_at": "={{ new Date().toISOString() }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -1149,13 +1601,16 @@
       "typeVersion": 1.2,
       "position": [
         80,
-        1420
+        1620
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $json.order.telegram_user_id }}",
-        "text": "رسید پرداختت تأیید نشد. لطفاً با پشتیبانی (@bardiaaSam) در تماس باش."
+        "chatId": "={{ $('تطبیق سفارش با تصمیم').first().json.order.telegram_user_id }}",
+        "text": "رسید پرداختت تأیید نشد. لطفاً با پشتیبانی (@bardiaaSam) در تماس باش.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1165,13 +1620,26 @@
       }
     },
     {
+      "id": "shape-mark-approved",
+      "name": "آماده‌سازی تأیید سفارش",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -280,
+        1400
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    order_id: t.order.order_id,\n    status: 'delivered',\n    reviewed_at: new Date().toISOString(),\n    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),\n  },\n}];"
+      }
+    },
+    {
       "id": "sheets-mark-approved",
       "name": "ثبت تأیید سفارش",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
       "position": [
         -160,
-        1220
+        1400
       ],
       "parameters": {
         "operation": "update",
@@ -1184,16 +1652,11 @@
           "value": "Orders"
         },
         "columns": {
-          "mappingMode": "defineBelow",
+          "mappingMode": "autoMapInputData",
+          "value": {},
           "matchingColumns": [
             "order_id"
-          ],
-          "value": {
-            "order_id": "={{ $json.order.order_id }}",
-            "status": "delivered",
-            "reviewed_at": "={{ new Date().toISOString() }}",
-            "expires_at": "={{ new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }}"
-          }
+          ]
         }
       },
       "credentials": {
@@ -1210,7 +1673,7 @@
       "typeVersion": 4.5,
       "position": [
         80,
-        1220
+        1400
       ],
       "parameters": {
         "operation": "read",
@@ -1238,10 +1701,23 @@
       "typeVersion": 2,
       "position": [
         320,
-        1220
+        1400
       ],
       "parameters": {
         "jsCode": "const order = $('تطبیق سفارش با تصمیم').first().json.order;\nconst rows = $input.all().map((i) => i.json);\nconst product = rows.find((r) => r.slug === order.product_slug);\nconst licenseKey = `IRCLU-${order.order_id.replace('ORDER-', '')}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;\nconst expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();\n\nreturn [{ json: { order: { ...order, expires_at: expiresAt }, product, licenseKey } }];"
+      }
+    },
+    {
+      "id": "shape-append-license",
+      "name": "آماده‌سازی ردیف لایسنس",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        1400
+      ],
+      "parameters": {
+        "jsCode": "const t = $json;\nreturn [{\n  json: {\n    license_key: t.licenseKey,\n    order_id: t.order.order_id,\n    product_slug: t.product.slug,\n    telegram_user_id: t.order.telegram_user_id,\n    customer: t.order.telegram_username,\n    machine_id: '',\n    issued_at: new Date().toISOString(),\n    expires_at: t.order.expires_at,\n    active: 'true',\n  },\n}];"
       }
     },
     {
@@ -1251,7 +1727,7 @@
       "typeVersion": 4.5,
       "position": [
         440,
-        1220
+        1400
       ],
       "parameters": {
         "operation": "append",
@@ -1264,18 +1740,8 @@
           "value": "Licenses"
         },
         "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "license_key": "={{ $json.licenseKey }}",
-            "order_id": "={{ $json.order.order_id }}",
-            "product_slug": "={{ $json.product.slug }}",
-            "telegram_user_id": "={{ $json.order.telegram_user_id }}",
-            "customer": "={{ $json.order.telegram_username }}",
-            "machine_id": "",
-            "issued_at": "={{ new Date().toISOString() }}",
-            "expires_at": "={{ $json.order.expires_at }}",
-            "active": "true"
-          }
+          "mappingMode": "autoMapInputData",
+          "value": {}
         }
       },
       "credentials": {
@@ -1292,7 +1758,7 @@
       "typeVersion": 2.2,
       "position": [
         560,
-        1220
+        1400
       ],
       "parameters": {
         "conditions": {
@@ -1303,7 +1769,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $json.product.type }}",
+              "leftValue": "={{ $('تطبیق محصول تحویلی').first().json.product.type }}",
               "rightValue": "app",
               "operator": {
                 "type": "string",
@@ -1322,13 +1788,16 @@
       "typeVersion": 1.2,
       "position": [
         800,
-        1140
+        1320
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $json.order.telegram_user_id }}",
-        "text": "=🎉 پرداخت تأیید شد!\n\nلینک دانلود {{ $json.product.title }}:\n{{ $json.product.file_url }}\n\n🔑 کد لایسنس شما (موقع اولین اجرا وارد کنید):\n{{ $json.licenseKey }}\n\nاشتراک شما به مدت یک ماه فعال است و هر روز به‌صورت خودکار توسط اپلیکیشن بررسی می‌شود."
+        "chatId": "={{ $('تطبیق محصول تحویلی').first().json.order.telegram_user_id }}",
+        "text": "=🎉 پرداخت تأیید شد!\n\nلینک دانلود {{ $('تطبیق محصول تحویلی').first().json.product.title }}:\n{{ $('تطبیق محصول تحویلی').first().json.product.file_url }}\n\n🔑 کد لایسنس شما (موقع اولین اجرا وارد کنید):\n{{ $('تطبیق محصول تحویلی').first().json.licenseKey }}\n\nاشتراک شما به مدت یک ماه فعال است و هر روز به‌صورت خودکار توسط اپلیکیشن بررسی می‌شود.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1344,13 +1813,16 @@
       "typeVersion": 1.2,
       "position": [
         800,
-        1320
+        1500
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "={{ $json.order.telegram_user_id }}",
-        "text": "=🎉 پرداخت تأیید شد!\n\nچون {{ $json.product.title }} برای هر مشتری جداگانه راه‌اندازی می‌شود، تیم ما ظرف حداکثر ۲۴ ساعت از همین چت با شما تماس می‌گیرد."
+        "chatId": "={{ $('تطبیق محصول تحویلی').first().json.order.telegram_user_id }}",
+        "text": "=🎉 پرداخت تأیید شد!\n\nچون {{ $('تطبیق محصول تحویلی').first().json.product.title }} برای هر مشتری جداگانه راه‌اندازی می‌شود، تیم ما ظرف حداکثر ۲۴ ساعت از همین چت با شما تماس می‌گیرد.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1366,13 +1838,99 @@
       "typeVersion": 1.2,
       "position": [
         1040,
-        1320
+        1500
       ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
-        "chatId": "PLACEHOLDER_ADMIN_CHAT_ID",
-        "text": "=✅ سفارش {{ $json.order.order_id }} تأیید شد — نیاز به راه‌اندازی دستی ربات دارد.\nنیازهای مشتری: {{ $json.order.requirements_summary }}"
+        "chatId": "6452519019",
+        "text": "=✅ سفارش {{ $('تطبیق محصول تحویلی').first().json.order.order_id }} تأیید شد — نیاز به راه‌اندازی دستی ربات دارد.\nنیازهای مشتری: {{ $('تطبیق محصول تحویلی').first().json.order.requirements_summary }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
+    },
+    {
+      "id": "sheets-read-orders-admin-menu",
+      "name": "خواندن سفارش‌ها (منوی ادمین)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -880,
+        1900
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Orders"
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "code-admin-stats",
+      "name": "ساخت آمار سریع ادمین",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        1900
+      ],
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((i) => i.json);\nconst now = Date.now();\nconst threeDaysMs = 3 * 24 * 60 * 60 * 1000;\n\nconst pendingReview = rows.filter((o) => o.status === 'pending_review').length;\nconst awaitingPayment = rows.filter((o) => o.status === 'awaiting_payment').length;\nconst deliveredThisMonth = rows.filter((o) => {\n  if (o.status !== 'delivered' || !o.reviewed_at) return false;\n  const d = new Date(o.reviewed_at);\n  const n = new Date();\n  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth();\n}).length;\nconst expiringSoon = rows.filter((o) => {\n  if (o.status !== 'delivered' || !o.expires_at) return false;\n  const diff = new Date(o.expires_at).getTime() - now;\n  return diff > 0 && diff <= threeDaysMs;\n}).length;\n\nreturn [{\n  json: {\n    chatId: $('تشخیص نوع پیام').first().json.chatId,\n    pendingReview, awaitingPayment, deliveredThisMonth, expiringSoon,\n  },\n}];"
+      }
+    },
+    {
+      "id": "tg-admin-menu",
+      "name": "منوی ادمین",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        1900
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "=👋 سلام مدیر!\n\n📋 در انتظار تایید رسید: {{ $json.pendingReview }}\n💳 منتظر پرداخت مشتری: {{ $json.awaitingPayment }}\n✅ تحویل‌شده این ماه: {{ $json.deliveredThisMonth }}\n⏰ رو‌به‌انقضا (۳ روز آینده): {{ $json.expiringSoon }}\n\nبرای دیدن لیست کامل مشتری‌ها، چت‌هاشون، سفارش‌ها و لایسنس‌هاشون، پنل مدیریت رو باز کن 👇",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🔗 پنل مدیریت کامل",
+                    "additionalFields": {
+                      "url": "https://irclu.com/admin/customers/"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "credentials": {
         "telegramApi": {
@@ -1409,7 +1967,7 @@
       "main": [
         [
           {
-            "node": "ذخیره شماره تلفن",
+            "node": "آماده‌سازی ردیف مشتری (شماره)",
             "type": "main",
             "index": 0
           }
@@ -1437,7 +1995,25 @@
         ],
         [
           {
-            "node": "خواندن وضعیت (پیام آزاد)",
+            "node": "خواندن وضعیت مشتری (پیام آزاد)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خواندن سفارش‌ها (منوی ادمین)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف مشتری (شماره)": {
+      "main": [
+        [
+          {
+            "node": "ذخیره شماره تلفن",
             "type": "main",
             "index": 0
           }
@@ -1491,7 +2067,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "دعوت به گفتگو",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "خواندن مشتریان": {
@@ -1520,11 +2102,22 @@
       "main": [
         [
           {
-            "node": "خواندن محصولات",
+            "node": "محصولی خواسته بود؟",
             "type": "main",
             "index": 0
           }
         ],
+        [
+          {
+            "node": "آماده‌سازی ردیف مشتری (محصول در انتظار)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف مشتری (محصول در انتظار)": {
+      "main": [
         [
           {
             "node": "ذخیره محصول در انتظار",
@@ -1538,7 +2131,36 @@
       "main": [
         [
           {
+            "node": "آماده‌سازی درخواست شماره",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی درخواست شماره": {
+      "main": [
+        [
+          {
             "node": "درخواست شماره تلفن",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "محصولی خواسته بود؟": {
+      "main": [
+        [
+          {
+            "node": "خواندن محصولات",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "خوش‌آمدگویی (بدون محصول)",
             "type": "main",
             "index": 0
           }
@@ -1589,6 +2211,17 @@
       "main": [
         [
           {
+            "node": "آماده‌سازی ردیف سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف سفارش": {
+      "main": [
+        [
+          {
             "node": "ثبت سفارش (در انتظار نیازها)",
             "type": "main",
             "index": 0
@@ -1597,6 +2230,17 @@
       ]
     },
     "ثبت سفارش (در انتظار نیازها)": {
+      "main": [
+        [
+          {
+            "node": "آماده‌سازی ردیف مشتری (در انتظار نیازها)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف مشتری (در انتظار نیازها)": {
       "main": [
         [
           {
@@ -1618,18 +2262,18 @@
         ]
       ]
     },
-    "خواندن وضعیت (پیام آزاد)": {
+    "خواندن وضعیت مشتری (پیام آزاد)": {
       "main": [
         [
           {
-            "node": "بررسی انتظار نیازها",
+            "node": "بررسی وضعیت مشتری (پیام آزاد)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "بررسی انتظار نیازها": {
+    "بررسی وضعیت مشتری (پیام آزاد)": {
       "main": [
         [
           {
@@ -1644,21 +2288,32 @@
       "main": [
         [
           {
-            "node": "خلاصه‌سازی نیازها با OpenAI",
+            "node": "خلاصه‌سازی نیازها با هوش مصنوعی",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "پاسخ عمومی / راهنما",
+            "node": "شماره ثبت شده؟ (پیام آزاد)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "خلاصه‌سازی نیازها با OpenAI": {
+    "خلاصه‌سازی نیازها با هوش مصنوعی": {
+      "main": [
+        [
+          {
+            "node": "آماده‌سازی خلاصه نیازها",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی خلاصه نیازها": {
       "main": [
         [
           {
@@ -1670,6 +2325,17 @@
       ]
     },
     "ثبت خلاصه نیازها در سفارش": {
+      "main": [
+        [
+          {
+            "node": "آماده‌سازی پاک کردن وضعیت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی پاک کردن وضعیت": {
       "main": [
         [
           {
@@ -1695,7 +2361,85 @@
       "main": [
         [
           {
+            "node": "پیدا کردن سفارش برای نمایش پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "پیدا کردن سفارش برای نمایش پرداخت": {
+      "main": [
+        [
+          {
             "node": "نمایش اطلاعات پرداخت",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "شماره ثبت شده؟ (پیام آزاد)": {
+      "main": [
+        [
+          {
+            "node": "ساخت پیام گفتگو با هوش مصنوعی",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "درخواست شماره تلفن",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ساخت پیام گفتگو با هوش مصنوعی": {
+      "main": [
+        [
+          {
+            "node": "چت فروش با هوش مصنوعی",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "چت فروش با هوش مصنوعی": {
+      "main": [
+        [
+          {
+            "node": "آماده‌سازی پاسخ و تاریخچه گفتگو",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی پاسخ و تاریخچه گفتگو": {
+      "main": [
+        [
+          {
+            "node": "ارسال پاسخ هوش مصنوعی به مشتری",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "آماده‌سازی ردیف تاریخچه گفتگو",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف تاریخچه گفتگو": {
+      "main": [
+        [
+          {
+            "node": "ذخیره تاریخچه گفتگو",
             "type": "main",
             "index": 0
           }
@@ -1728,7 +2472,7 @@
       "main": [
         [
           {
-            "node": "ثبت رسید پرداخت",
+            "node": "آماده‌سازی به‌روزرسانی رسید",
             "type": "main",
             "index": 0
           }
@@ -1736,6 +2480,17 @@
         [
           {
             "node": "سفارشی پیدا نشد",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی به‌روزرسانی رسید": {
+      "main": [
+        [
+          {
+            "node": "ثبت رسید پرداخت",
             "type": "main",
             "index": 0
           }
@@ -1779,6 +2534,24 @@
       "main": [
         [
           {
+            "node": "قبلاً پردازش شده؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "قبلاً پردازش شده؟": {
+      "main": [
+        [
+          {
+            "node": "اطلاع سفارش قبلاً پردازش‌شده",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "تأیید یا رد؟",
             "type": "main",
             "index": 0
@@ -1790,14 +2563,36 @@
       "main": [
         [
           {
-            "node": "ثبت تأیید سفارش",
+            "node": "آماده‌سازی تأیید سفارش",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
+            "node": "آماده‌سازی رد سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی رد سفارش": {
+      "main": [
+        [
+          {
             "node": "ثبت رد سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی تأیید سفارش": {
+      "main": [
+        [
+          {
+            "node": "ثبت تأیید سفارش",
             "type": "main",
             "index": 0
           }
@@ -1838,6 +2633,17 @@
       ]
     },
     "تطبیق محصول تحویلی": {
+      "main": [
+        [
+          {
+            "node": "آماده‌سازی ردیف لایسنس",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "آماده‌سازی ردیف لایسنس": {
       "main": [
         [
           {
@@ -1882,6 +2688,28 @@
         [
           {
             "node": "اطلاع نیاز به راه‌اندازی دستی",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "خواندن سفارش‌ها (منوی ادمین)": {
+      "main": [
+        [
+          {
+            "node": "ساخت آمار سریع ادمین",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ساخت آمار سریع ادمین": {
+      "main": [
+        [
+          {
+            "node": "منوی ادمین",
             "type": "main",
             "index": 0
           }
