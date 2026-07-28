@@ -1920,7 +1920,9 @@
                   {
                     "text": "🔗 پنل مدیریت کامل",
                     "additionalFields": {
-                      "url": "https://irclu.com/admin/customers/"
+                      "web_app": {
+                        "url": "https://irclu.com/admin/customers/"
+                      }
                     }
                   }
                 ]
