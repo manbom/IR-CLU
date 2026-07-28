@@ -13,7 +13,10 @@
       "parameters": {
         "httpMethod": "GET",
         "path": "admin-panel",
-        "responseMode": "responseNode"
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
       }
     },
     {
@@ -71,7 +74,17 @@
       ],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}"
+        "responseBody": "={{ JSON.stringify({ error: 'unauthorized' }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
       }
     },
     {
@@ -182,7 +195,17 @@
       ],
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}"
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
       }
     }
   ],

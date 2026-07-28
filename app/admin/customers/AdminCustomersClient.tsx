@@ -6,7 +6,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 
 // این آدرس رو با آدرس واقعی وبهوک ورک‌فلوی «IR-CLU — API پنل ادمین» عوض کن
 // (بعد از فعال کردن اون ورک‌فلو در n8n، از خودِ نود «درخواست پنل ادمین» کپی کن)
-const WEBHOOK_URL = "https://YOUR-N8N-INSTANCE/webhook/admin-panel";
+const WEBHOOK_URL = "https://ircluweb.app.n8n.cloud/webhook/admin-panel";
 
 const STORAGE_KEY = "irclu-admin-secret";
 
