@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/nav/SiteHeader";
 import { Hero } from "@/components/sections/Hero";
+import { ScrollStory } from "@/components/sections/ScrollStory";
 import { Process } from "@/components/sections/Process";
 import { Services } from "@/components/sections/Services";
 import { About } from "@/components/sections/About";
@@ -13,6 +14,7 @@ export default function Home() {
       <SiteHeader />
       <main>
         <Hero />
+        <ScrollStory />
         <Process />
         <Services />
         <About />
