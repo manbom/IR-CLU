@@ -1564,6 +1564,61 @@
       }
     },
     {
+      "id": "if-already-delivered",
+      "name": "سفارش قبلاً تحویل شده؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -280,
+        1500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.order.status }}",
+              "rightValue": "delivered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "tg-already-delivered",
+      "name": "اطلاع تحویل تکراری به ادمین",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        1560
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "6452519019",
+        "text": "=⚠️ سفارش {{ $json.order.order_id }} قبلاً تحویل داده شده بود — برای جلوگیری از صدور لایسنس تکراری، این تاییدِ دوباره نادیده گرفته شد.\nاگه واقعاً لازمه لایسنس دوباره صادر بشه، باید دستی از شیت Licenses اضافه‌ش کنی.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Store Bot"
+        }
+      }
+    },
+    {
       "id": "shape-mark-rejected",
       "name": "آماده‌سازی رد سفارش",
       "type": "n8n-nodes-base.code",
@@ -2710,7 +2765,7 @@
       "main": [
         [
           {
-            "node": "آماده‌سازی تأیید سفارش",
+            "node": "سفارش قبلاً تحویل شده؟",
             "type": "main",
             "index": 0
           }
@@ -2718,6 +2773,24 @@
         [
           {
             "node": "آماده‌سازی رد سفارش",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "سفارش قبلاً تحویل شده؟": {
+      "main": [
+        [
+          {
+            "node": "اطلاع تحویل تکراری به ادمین",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "آماده‌سازی تأیید سفارش",
             "type": "main",
             "index": 0
           }
