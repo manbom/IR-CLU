@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { getAllPosts, getPostBySlug } from "@/lib/blog";
+import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog";
 import { formatJalali } from "@/lib/format-date";
 
 export function generateStaticParams() {
@@ -45,6 +45,7 @@ export default async function BlogPostPage({
   if (!exists) notFound();
 
   const post = getPostBySlug(slug);
+  const relatedPosts = getRelatedPosts(post);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -131,6 +132,23 @@ export default async function BlogPostPage({
                   </summary>
                   <p className="mt-3 leading-8 text-muted">{item.answer}</p>
                 </details>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {relatedPosts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-xl font-bold text-foreground">مقالات مرتبط</h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              {relatedPosts.map((related) => (
+                <Link
+                  key={related.slug}
+                  href={`/blog/${related.slug}/`}
+                  className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-cyan"
+                >
+                  <p className="font-semibold leading-7 text-foreground">{related.title}</p>
+                </Link>
               ))}
             </div>
           </div>

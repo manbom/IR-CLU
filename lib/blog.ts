@@ -51,6 +51,19 @@ export function getAllPosts(): PostMeta[] {
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
+export function getRelatedPosts(post: PostMeta, count = 3): PostMeta[] {
+  const others = getAllPosts().filter((p) => p.slug !== post.slug);
+
+  const scored = others
+    .map((other) => ({
+      post: other,
+      sharedTags: other.tags.filter((tag) => post.tags.includes(tag)).length,
+    }))
+    .sort((a, b) => b.sharedTags - a.sharedTags || (a.post.date < b.post.date ? 1 : -1));
+
+  return scored.slice(0, count).map((s) => s.post);
+}
+
 export function getPostBySlug(slug: string): Post {
   const raw = fs.readFileSync(path.join(BLOG_DIR, `${slug}.md`), "utf8");
   const { data, content } = matter(raw);
