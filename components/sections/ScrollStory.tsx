@@ -4,12 +4,13 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ScrollSequence } from "@/components/ScrollSequence";
 
-const FRAME_COUNT = 100;
+const FRAME_COUNT = 55;
 
 /**
- * Cinematic scroll section — frames extracted from a real video (ffmpeg, 7fps) into
- * public/scroll-story/pipeline/frame-001.jpg .. frame-100.jpg. See the `graphify` skill for how
- * to swap in a different clip later.
+ * Cinematic scroll section — frames extracted from a real video (ffmpeg, 7fps, 640x640) into
+ * public/scroll-story/pipeline/frame-001.jpg .. frame-055.jpg (trimmed to end on the fully-
+ * bloomed frame instead of the clip's full length). See the `graphify` skill for how to swap in
+ * a different clip later.
  */
 export function ScrollStory() {
   return (

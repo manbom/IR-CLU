@@ -31,16 +31,42 @@ export function ScrollSequence({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }, []);
 
+  // Don't compete with the initial page load (Hero's WebGL scene, fonts, etc.) — only start
+  // pulling ~55 frames once the section is within a couple screens of the viewport.
   useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    if (!("IntersectionObserver" in window)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShouldLoad(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoad(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "800px 0px" }
+    );
+    io.observe(wrap);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!shouldLoad) return;
     let cancelled = false;
     const imgs: HTMLImageElement[] = [];
     for (let i = 0; i < frameCount; i++) {
       const img = new Image();
+      img.decoding = "async";
       img.src = frameSrc(i);
       imgs.push(img);
     }
@@ -49,7 +75,7 @@ export function ScrollSequence({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [frameCount]);
+  }, [frameCount, shouldLoad]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,20 +88,15 @@ export function ScrollSequence({
       const img = imagesRef.current[index];
       if (!canvas || !ctx || !img || !img.complete || !img.naturalWidth) return;
       const canvasRatio = canvas.width / canvas.height;
-      const imgRatio = img.naturalWidth / img.naturalHeight;
-      let dw = canvas.width;
-      let dh = canvas.height;
-      let dx = 0;
-      let dy = 0;
-      if (imgRatio > canvasRatio) {
-        dh = canvas.height;
-        dw = dh * imgRatio;
-        dx = (canvas.width - dw) / 2;
-      } else {
-        dw = canvas.width;
-        dh = dw / imgRatio;
-        dy = (canvas.height - dh) / 2;
-      }
+      const scaleW = canvas.width / img.naturalWidth;
+      const scaleH = canvas.height / img.naturalHeight;
+      // Landscape windows (desktop): "contain" — show the whole frame, letterboxed, never
+      // cropped/zoomed. Portrait windows (mobile): "cover" — fill edge-to-edge like before.
+      const scale = canvasRatio > 1 ? Math.min(scaleW, scaleH) : Math.max(scaleW, scaleH);
+      const dw = img.naturalWidth * scale;
+      const dh = img.naturalHeight * scale;
+      const dx = (canvas.width - dw) / 2;
+      const dy = (canvas.height - dh) / 2;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, dx, dy, dw, dh);
     }
@@ -128,7 +149,7 @@ export function ScrollSequence({
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [frameCount, reducedMotion]);
+  }, [frameCount, reducedMotion, shouldLoad]);
 
   return (
     <div
