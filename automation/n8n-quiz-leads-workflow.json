@@ -1,0 +1,97 @@
+{
+  "name": "IR-CLU — دریافت لید از تست تشخیص اتوماسیون",
+  "nodes": [
+    {
+      "id": "webhook-quiz-lead",
+      "name": "دریافت پاسخ تست",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-720, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "quiz-lead",
+        "responseMode": "onReceived",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "PLACEHOLDER_WEBHOOK_ID"
+    },
+    {
+      "id": "code-format-lead",
+      "name": "ساخت ردیف لید",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-480, 0],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\n\nconst categoryLabels = {\n  \"telegram-bot\": \"ربات تلگرام/بله\",\n  \"n8n-integration\": \"یکپارچه‌سازی با n8n\",\n  \"custom-app\": \"اپلیکیشن/ایجنت اختصاصی\",\n  \"store-product\": \"محصول اشتراکی\",\n};\n\nconst answersText = (body.answers || [])\n  .map((a) => `- ${a.question}\\n  ${a.answer}`)\n  .join(\"\\n\");\n\nreturn [{\n  json: {\n    date: new Date().toISOString(),\n    name: body.name || \"(بدون نام)\",\n    contact: body.contact || \"\",\n    category: categoryLabels[body.category] || body.category,\n    answersText,\n  },\n}];"
+      }
+    },
+    {
+      "id": "sheets-append-lead",
+      "name": "افزودن به شیت Quiz Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [-240, 0],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "mode": "list",
+          "value": "PLACEHOLDER_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Quiz Leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "name": "={{ $json.name }}",
+            "contact": "={{ $json.contact }}",
+            "category": "={{ $json.category }}",
+            "answers": "={{ $json.answersText }}"
+          }
+        }
+      },
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "PLACEHOLDER",
+          "name": "Google Sheets (IR-CLU Store)"
+        }
+      }
+    },
+    {
+      "id": "telegram-notify-lead",
+      "name": "اطلاع در تلگرام",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "PLACEHOLDER_CHAT_ID",
+        "text": "=🎯 لید جدید از تست تشخیص اتوماسیون:\n\nنام: {{ $json.name }}\nتماس: {{ $json.contact }}\nپیشنهاد به کاربر: {{ $json.category }}\n\nپاسخ‌ها:\n{{ $json.answersText }}"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "دریافت پاسخ تست": {
+      "main": [[{ "node": "ساخت ردیف لید", "type": "main", "index": 0 }]]
+    },
+    "ساخت ردیف لید": {
+      "main": [[{ "node": "افزودن به شیت Quiz Leads", "type": "main", "index": 0 }]]
+    },
+    "افزودن به شیت Quiz Leads": {
+      "main": [[{ "node": "اطلاع در تلگرام", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" }
+}
