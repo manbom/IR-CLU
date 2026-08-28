@@ -17,7 +17,7 @@ export function Portfolio() {
         </Eyebrow>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 className="max-w-lg text-3xl font-bold leading-tight text-foreground md:text-4xl">
-            پروژه‌هایی که تا امروز اتوماتیک کرده‌ایم
+            قسمتی از پروژه‌های تیم IR-CLU
           </h2>
           <p className="max-w-xs text-sm leading-7 text-muted">
             روی هر پروژه بزنید تا ببینید دقیقاً چطور کار می‌کند.
