@@ -31,6 +31,14 @@
   --font-mono: var(--font-kode-mono), var(--font-vazirmatn);
 }
 
+/* English tree (app/en/layout.tsx) — overrides the Persian display/body font.
+   Higher specificity than :root (html + attribute selector beats html alone)
+   so this wins regardless of source order; Kode Mono stays shared. */
+html[lang="en"] {
+  --font-display: var(--font-geist);
+  --font-body: var(--font-geist);
+}
+
 html {
   scroll-behavior: auto;
 }

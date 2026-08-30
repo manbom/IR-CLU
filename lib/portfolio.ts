@@ -1,4 +1,16 @@
-export const portfolioItems = [
+import type { Locale } from "./locale";
+
+export type PortfolioItem = {
+  slug: string;
+  image: string;
+  title: string;
+  description: string;
+  capabilities: string[];
+  howItWorks: string;
+  idealFor: string;
+};
+
+const portfolioItemsFa: PortfolioItem[] = [
   {
     slug: "cphoto-editor",
     image: "/portfolio/cphoto.png",
@@ -113,6 +125,21 @@ export const portfolioItems = [
       "کسب‌وکارهایی که می‌خواهند بلاگ سایتشان فعال بماند بدون این‌که هر روز وقت بگذارند.",
   },
   {
+    slug: "website-design",
+    image: "/portfolio/website.png",
+    title: "طراحی وب‌سایت",
+    description: "همین وب‌سایتی که پیش روی شماست؛ طراحی و توسعه اختصاصی تیم ما.",
+    capabilities: [
+      "طراحی اختصاصی، نه قالب آماده",
+      "سئوی فنی کامل از روز اول (سایت‌مپ، دیتای ساخت‌یافته، سرعت بارگذاری)",
+      "بلاگ و فروشگاه متصل به همان زیرساخت اتوماسیون",
+    ],
+    howItWorks:
+      "سایت به‌صورت کاملاً استاتیک ساخته می‌شود تا روی ساده‌ترین و ارزان‌ترین هاست هم با سرعت بالا اجرا شود، و بخش‌های پویا (مقالات، فروشگاه) از طریق همین ورک‌فلوهای اتوماسیون به‌روزرسانی می‌شوند — بدون نیاز به سرور یا دیتابیس جداگانه.",
+    idealFor:
+      "کسب‌وکارهایی که هم یک سایت حرفه‌ای می‌خواهند، هم نمی‌خواهند هزینه‌ی هاست و نگهداری سنگین بپردازند.",
+  },
+  {
     slug: "bale-catalog-bot",
     image: "/portfolio/bale-catalog-bot.png",
     title: "ربات مدیریت محصولات کانال بله",
@@ -129,21 +156,156 @@ export const portfolioItems = [
     idealFor:
       "فروشگاه‌هایی که کاتالوگ محصولاتشان را با پست در یک کانال بله معرفی می‌کنند و از ویرایش دستی پست‌ها برای هر تغییر قیمت خسته شده‌اند.",
   },
+];
+
+const portfolioItemsEn: PortfolioItem[] = [
+  {
+    slug: "cphoto-editor",
+    image: "/portfolio/cphoto.png",
+    title: "Automatic Photo Editing App",
+    description:
+      "An app that applies the same set of edits to a whole batch of photos automatically and hands back delivery-ready output.",
+    capabilities: [
+      "Batch processing — hundreds of photos in one run, no repeating each step by hand",
+      "Consistent output across color, size, and crop, with no final touch-up needed",
+      "Runs on a regular personal computer, no server or extra cloud cost",
+    ],
+    howItWorks:
+      "The user imports a folder of raw photos and defines a set of edits once (resizing, background removal, watermark, center crop). The app applies that exact same edit set to every photo and drops the results into a new, delivery-ready folder.",
+    idealFor:
+      "Online stores and manufacturers who need fresh product photos ready for a catalog or social media every week.",
+  },
+  {
+    slug: "content-telegram-bot",
+    image: "/portfolio/content-bot.png",
+    title: "Telegram Content Bot",
+    description:
+      "A Telegram-bot version of the same photo-editing app, for fast visual content straight from a chat.",
+    capabilities: [
+      "Nothing to install — just send the photo to the bot",
+      "Output in seconds, ready to publish",
+      "Can be connected to a content team's channel or group",
+    ],
+    howItWorks:
+      "The same image-processing engine as the desktop app, this time behind a Telegram bot. Send a raw photo in the chat, the bot applies the same predefined settings, and returns the finished photo in the same conversation.",
+    idealFor:
+      "Content teams for whom publishing speed matters more than opening a separate piece of software.",
+  },
+  {
+    slug: "folad-joveyn-sales-bot",
+    image: "/portfolio/folad.png",
+    title: "Folad Joveyn Sales Bot",
+    description:
+      "A dedicated Telegram bot for the Folad Joveyn factory's sales department, for order placement and direct customer contact.",
+    capabilities: [
+      "Answers price and stock inquiries without a phone call",
+      "Places orders directly inside the Telegram conversation",
+      "An always-available communication channel between the factory and customers",
+    ],
+    howItWorks:
+      "The bot is connected to the factory's real product and pricing data. A customer can ask about price, stock, or order status at any hour and get an answer instantly; sales staff only get involved for actual negotiations.",
+    idealFor:
+      "Manufacturers and wholesalers who handle a high volume of repetitive customer inquiries.",
+  },
+  {
+    slug: "melkpro-bot",
+    image: "/portfolio/melkpro.png",
+    title: "Real Estate Intelligence Bot",
+    description:
+      "A real-estate Telegram bot that finds valuable listings from multiple sources and delivers them to the agent.",
+    capabilities: [
+      "Continuously monitors several listing sources at once",
+      "Filters by the agent's own exact criteria (area, price, size)",
+      "Instant delivery in Telegram — no delay, no manual searching",
+    ],
+    howItWorks:
+      "The bot continuously checks listing sources and compares every new listing against predefined criteria. Only the ones actually worth reviewing reach the agent — not the entire raw feed.",
+    idealFor:
+      "Real estate agencies and agents who spend their time manually searching several different sites.",
+  },
+  {
+    slug: "product-scraper",
+    image: "/portfolio/khazeshapp.png",
+    title: "Product Data Extraction App",
+    description:
+      "An app that automatically checks multiple sites and collects the product data you're after.",
+    capabilities: [
+      "Monitors several sources/competitors simultaneously",
+      "Structured output, ready to drop into Excel or a database",
+      "Configurable schedule for automatic data refreshes",
+    ],
+    howItWorks:
+      "The app checks the target URLs on the schedule you set, extracts the specified data (price, stock, specs), and stores it in a format ready for analysis.",
+    idealFor:
+      "Businesses that need to continuously track competitor pricing or stock across multiple sources.",
+  },
+  {
+    slug: "content-scout-agent",
+    image: "/portfolio/snbot.png",
+    title: "Instagram Content Idea Agent",
+    description:
+      "An agent that analyzes competitors' posts, pulls fresh content scenarios out of them, designs its own cover images, and automatically replies to comments on the Instagram page.",
+    capabilities: [
+      "Continuous competitor analysis within the same niche",
+      "Several ready content ideas per run, not one generic idea",
+      "Automatic cover-image design for each scenario",
+      "Automatic replies to comments on the page",
+    ],
+    howItWorks:
+      "The agent reviews competitors' top-performing posts in a given niche, extracts the patterns behind their success, and proposes several genuinely new content scenarios (not copies) based on those patterns — building a visual cover for each one along the way.",
+    idealFor:
+      "Business Instagram pages where producing content regularly has become too time-consuming.",
+  },
+  {
+    slug: "article-publisher-agent",
+    image: "/portfolio/article-publisher-agent.png",
+    title: "Automatic Article Publishing Agent",
+    description:
+      "An n8n-based agent that writes articles, commits them to GitHub, and drives the site's entire publishing chain with no manual work.",
+    capabilities: [
+      "Generates a daily article from a predefined content calendar",
+      "Commits automatically to GitHub, no manual steps",
+      "Publishes automatically to the live site, no manual upload",
+    ],
+    howItWorks:
+      "This exact website works exactly this way: an n8n workflow picks a topic from the content calendar every day, writes the article, commits it directly to the site's code repository, and kicks off the site's automatic build to publish it.",
+    idealFor:
+      "Businesses that want their site's blog to stay active without spending time on it every day.",
+  },
   {
     slug: "website-design",
     image: "/portfolio/website.png",
-    title: "طراحی وب‌سایت",
-    description: "همین وب‌سایتی که پیش روی شماست؛ طراحی و توسعه اختصاصی تیم ما.",
+    title: "Website Design",
+    description: "This exact website — designed and built in-house by our own team.",
     capabilities: [
-      "طراحی اختصاصی، نه قالب آماده",
-      "سئوی فنی کامل از روز اول (سایت‌مپ، دیتای ساخت‌یافته، سرعت بارگذاری)",
-      "بلاگ و فروشگاه متصل به همان زیرساخت اتوماسیون",
+      "Custom design, not a template",
+      "Full technical SEO from day one (sitemap, structured data, load speed)",
+      "Blog and store connected to the same automation infrastructure",
     ],
     howItWorks:
-      "سایت به‌صورت کاملاً استاتیک ساخته می‌شود تا روی ساده‌ترین و ارزان‌ترین هاست هم با سرعت بالا اجرا شود، و بخش‌های پویا (مقالات، فروشگاه) از طریق همین ورک‌فلوهای اتوماسیون به‌روزرسانی می‌شوند — بدون نیاز به سرور یا دیتابیس جداگانه.",
+      "The site is built as a fully static export so it runs fast even on the cheapest, simplest hosting, while the dynamic parts (articles, store) get updated through these same automation workflows — no server or separate database needed.",
     idealFor:
-      "کسب‌وکارهایی که هم یک سایت حرفه‌ای می‌خواهند، هم نمی‌خواهند هزینه‌ی هاست و نگهداری سنگین بپردازند.",
+      "Businesses that want a professional site without paying for heavy hosting and maintenance.",
   },
-] as const;
+  {
+    slug: "bale-catalog-bot",
+    image: "/portfolio/bale-catalog-bot.png",
+    title: "Bale Channel Product Management Bot",
+    description:
+      "Full automation of product management for a store on Bale (Iran's Telegram-like messenger): the owner changes a price from inside a private chat with the bot, and the bot edits that same original post in the channel — no separate web panel needed.",
+    capabilities: [
+      "A full management panel inside the chat, with smart product search and inline buttons",
+      "A promotion system with temporary discounts across multiple products and scheduled auto-end",
+      "Automatically edits the same original channel post — never creates a duplicate",
+      "A complete change history, with access restricted to authorized admins only",
+    ],
+    howItWorks:
+      "Every new post in the Bale channel is automatically registered in the database. The owner searches for a product from a private chat with the bot, changes its price or promotion from a button menu, and the bot edits that same original post in the channel without ever sending a new one — the whole logic runs on n8n and PostgreSQL, with no dedicated backend.",
+    idealFor:
+      "Stores that showcase their product catalog as posts in a Bale channel and are tired of manually editing posts for every price change.",
+  },
+];
 
-export type PortfolioItem = (typeof portfolioItems)[number];
+export function getPortfolioItems(locale: Locale): PortfolioItem[] {
+  return locale === "en" ? portfolioItemsEn : portfolioItemsFa;
+}

@@ -1,4 +1,6 @@
-export const processStages = [
+import type { Locale } from "./locale";
+
+const processStagesFa = [
   {
     index: "01",
     title: "کشف",
@@ -30,3 +32,40 @@ export const processStages = [
       "پایش، بهبود مستمر و پشتیبانی فنی پس از راه‌اندازی، تا اتوماسیون شما همیشه به‌روز و پایدار بماند.",
   },
 ];
+
+const processStagesEn = [
+  {
+    index: "01",
+    title: "Discover",
+    description:
+      "Reviewing your current business processes and pinpointing exactly where automation saves the most time and money.",
+  },
+  {
+    index: "02",
+    title: "Design",
+    description:
+      "Designing the bot, website, or workflow architecture — focused on a simple user experience and a clear data path between every part.",
+  },
+  {
+    index: "03",
+    title: "Build",
+    description:
+      "Technical implementation on the right infrastructure — from Telegram and Bale bots to web apps and connecting to your services.",
+  },
+  {
+    index: "04",
+    title: "Automate",
+    description:
+      "Connecting every part with n8n workflows so data flows between your systems without manual intervention.",
+  },
+  {
+    index: "05",
+    title: "Support",
+    description:
+      "Monitoring, continuous improvement, and technical support after launch, so your automation stays up to date and stable.",
+  },
+];
+
+export function getProcessStages(locale: Locale) {
+  return locale === "en" ? processStagesEn : processStagesFa;
+}

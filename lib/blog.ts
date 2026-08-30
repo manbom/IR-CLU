@@ -3,7 +3,12 @@ import path from "path";
 import matter from "gray-matter";
 import { marked } from "marked";
 
-const BLOG_DIR = path.join(process.cwd(), "content/blog");
+export type Locale = "fa" | "en";
+
+const BLOG_DIR: Record<Locale, string> = {
+  fa: path.join(process.cwd(), "content/blog"),
+  en: path.join(process.cwd(), "content/blog-en"),
+};
 
 export type FaqItem = { question: string; answer: string };
 
@@ -30,11 +35,19 @@ function readingTimeFor(content: string) {
   return Math.max(1, Math.round(words / 180));
 }
 
-export function getAllPosts(): PostMeta[] {
-  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith(".md"));
+// content/blog-en/ may not exist yet (no English posts translated so far) — that's
+// a normal, expected state during the bilingual rollout, not an error.
+function listMarkdownFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
+}
+
+export function getAllPosts(locale: Locale = "fa"): PostMeta[] {
+  const dir = BLOG_DIR[locale];
+  const files = listMarkdownFiles(dir);
 
   const posts = files.map((filename) => {
-    const raw = fs.readFileSync(path.join(BLOG_DIR, filename), "utf8");
+    const raw = fs.readFileSync(path.join(dir, filename), "utf8");
     const { data, content } = matter(raw);
 
     return {
@@ -51,8 +64,8 @@ export function getAllPosts(): PostMeta[] {
   return posts.sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
-export function getRelatedPosts(post: PostMeta, count = 3): PostMeta[] {
-  const others = getAllPosts().filter((p) => p.slug !== post.slug);
+export function getRelatedPosts(post: PostMeta, locale: Locale = "fa", count = 3): PostMeta[] {
+  const others = getAllPosts(locale).filter((p) => p.slug !== post.slug);
 
   const scored = others
     .map((other) => ({
@@ -64,8 +77,9 @@ export function getRelatedPosts(post: PostMeta, count = 3): PostMeta[] {
   return scored.slice(0, count).map((s) => s.post);
 }
 
-export function getPostBySlug(slug: string): Post {
-  const raw = fs.readFileSync(path.join(BLOG_DIR, `${slug}.md`), "utf8");
+export function getPostBySlug(slug: string, locale: Locale = "fa"): Post {
+  const dir = BLOG_DIR[locale];
+  const raw = fs.readFileSync(path.join(dir, `${slug}.md`), "utf8");
   const { data, content } = matter(raw);
 
   return {
