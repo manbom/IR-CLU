@@ -6,11 +6,17 @@
       "name": "هر روز ساعت ۸ صبح",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-720, 0],
+      "position": [
+        -720,
+        0
+      ],
       "parameters": {
         "rule": {
           "interval": [
-            { "field": "cronExpression", "expression": "0 8 * * *" }
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
           ]
         }
       }
@@ -20,7 +26,10 @@
       "name": "انتخاب موضوع",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-480, 0],
+      "position": [
+        -480,
+        0
+      ],
       "parameters": {
         "jsCode": "// تقویم محتوایی — بر اساس تحقیق کلمات کلیدی بازار ایران (تیر ۱۴۰۵)، بعداً در مرداد ۱۴۰۵\n// از ۳۰ به ۸۵ موضوع گسترش داده شد چون تقویم ۳۰تایی قبلی داشت بعد از ۳۰ روز از اول تکرار\n// می‌شد (دو مقاله‌ی کاملاً تکراری همین‌طور منتشر شده بودند) — فهرست را دست‌نخورده نگه دار،\n// فقط موضوع تازه به انتهایش اضافه کن، هیچ‌وقت موضوع قدیمی را حذف/جابه‌جا نکن چون ترتیب\n// همان چیزی است که staticData.dayIndex رویش می‌شمارد.\nconst topics = [\n  \"اتوماسیون کسب‌وکار چیست و چرا در ۱۴۰۵ ضروری شده\",\n  \"هزینه اتوماسیون کسب‌وکار در ایران: چه عواملی قیمت را تعیین می‌کنند\",\n  \"قیمت ساخت ربات تلگرام حرفه‌ای در ۱۴۰۵ چقدر است\",\n  \"تفاوت ربات تلگرام ارزان و ربات تلگرام حرفه‌ای متصل به دیتابیس\",\n  \"ربات بله برای کسب‌وکار: چه زمانی به‌جای تلگرام باید از بله استفاده کنیم\",\n  \"مقایسه ربات تلگرام و ربات بله: کدام برای کسب‌وکار شما مناسب‌تر است\",\n  \"n8n چیست و چرا جایگزین بهتری برای Zapier در ایران است\",\n  \"آموزش مفهومی n8n برای صاحبان کسب‌وکار، نه برنامه‌نویس‌ها\",\n  \"چطور ربات تلگرام فروش را به دیتابیس یا اکسل واقعی کسب‌وکار وصل کنیم\",\n  \"ربات تلگرام برای فروشگاه اینترنتی: پیگیری سفارش بدون تماس تلفنی\",\n  \"ربات هوشمند برای بنگاه‌های املاک: چطور آگهی‌های باارزش را خودکار پیدا کنیم\",\n  \"اتوماسیون فروش برای کارخانه‌ها و تولیدی‌ها: یک نمونه واقعی از صنعت فولاد\",\n  \"ایجنت هوش مصنوعی برای تولید محتوای شبکه‌های اجتماعی: از ایده تا انتشار\",\n  \"اتوماسیون پاسخ‌گویی ۲۴ ساعته به مشتری بدون استخدام نیروی جدید\",\n  \"چک‌لیست: کدام فرآیند کسب‌وکار شما باید اول اتوماتیک شود\",\n  \"اتوماسیون کسب‌وکار کوچک در برابر اتوماسیون سازمانی: تفاوت رویکرد و هزینه\",\n  \"ربات تلگرام برای پشتیبانی مشتری: از ساعت‌ها انتظار تا پاسخ در چند ثانیه\",\n  \"چطور با هوش مصنوعی محتوای تکراری (نامه، پاسخ، خلاصه) را خودکار کنیم\",\n  \"استخراج خودکار اطلاعات از اسناد و تصاویر با هوش مصنوعی (OCR) برای کسب‌وکار ایرانی\",\n  \"چطور یک ایجنت هوش مصنوعی می‌تواند قیمت رقبا را هر روز رصد کند\",\n  \"راهنمای شروع اتوماسیون برای کسب‌وکارهای خانوادگی و فروشگاه‌های کوچک\",\n  \"اتوماسیون یادآوری پرداخت و کاهش مطالبات معوق با ربات تلگرام\",\n  \"چطور ربات تلگرام امنیت داده‌های مشتریان را حفظ می‌کند\",\n  \"زمان‌بندی واقعی: ساخت یک ربات تلگرام حرفه‌ای چقدر طول می‌کشد\",\n  \"۷ اشتباه رایج کسب‌وکارها هنگام سفارش ساخت ربات تلگرام\",\n  \"اتوماسیون هماهنگی جلسات و وقت‌دهی بدون رفت‌وبرگشت پیام\",\n  \"چطور کسب‌وکار کوچک هم می‌تواند مثل شرکت‌های بزرگ در اتوماسیون صرفه‌جویی کند\",\n  \"سوالات متداول درباره اتوماسیون با هوش مصنوعی برای کسب‌وکار ایرانی\",\n  \"جمع‌بندی یک ماه: کدام نوع اتوماسیون بیشترین بازگشت سرمایه را برای کسب‌وکار کوچک دارد\",\n  \"چطور با n8n چند سرویس پراکنده (ایمیل، تلگرام، اکسل) را یک‌جا مدیریت کنیم\",\n  \"ربات واتساپ برای کسب‌وکار: چرا هنوز گزینه‌ی اول ایران نیست\",\n  \"پاسخ خودکار به کامنت و دایرکت اینستاگرام: کی به‌صرفه است و کی نه\",\n  \"اتوماسیون رستوران و کافه: از سفارش‌گیری تا رزرو میز\",\n  \"اتوماسیون باشگاه و سالن ورزشی: یادآوری خودکار و مدیریت عضویت\",\n  \"اتوماسیون مطب و کلینیک: نوبت‌دهی بدون تماس تلفنی\",\n  \"اتوماسیون دفتر وکالت و مشاوره حقوقی: پیگیری پرونده بدون کاغذبازی\",\n  \"اتوماسیون آموزشگاه و کلاس‌های خصوصی: ثبت‌نام و یادآوری جلسه\",\n  \"اتوماسیون سالن زیبایی و آرایشگاه: نوبت‌دهی و یادآوری خودکار\",\n  \"n8n در برابر Make: کدام برای کسب‌وکار ایرانی منطقی‌تر است\",\n  \"چطور بفهمیم کدام بخش کسب‌وکارمان اول باید اتوماتیک شود\",\n  \"بازگشت سرمایه اتوماسیون را چطور واقعی محاسبه کنیم، نه تخمینی\",\n  \"چرا بعضی از پروژه‌های اتوماسیون شکست می‌خورند و چطور جلویش را بگیریم\",\n  \"یکپارچه‌سازی تلگرام، اینستاگرام و سایت در یک پنل واحد\",\n  \"چطور مشتری‌های قدیمی را با اتوماسیون دوباره فعال کنیم\",\n  \"اتوماسیون یادآوری تمدید اشتراک و جلوگیری از ریزش مشتری\",\n  \"ایجنت هوش مصنوعی برای تولید ایده محتوای وایرال: از تحلیل رقبا تا سناریوی آماده\",\n  \"چرا اکثر ابزارهای تولید محتوا با هوش مصنوعی فقط حدس می‌زنند، نه تحلیل واقعی\",\n  \"اتوماسیون فروشگاه اینترنتی کوچک بدون نیاز به وب‌سایت جداگانه\",\n  \"مدیریت محصولات کانال بله بدون ویرایش دستی هر پست: یک نمونه واقعی\",\n  \"چک‌لیست امنیتی قبل از اتصال ربات تلگرام به دیتابیس واقعی کسب‌وکار\",\n  \"چطور بدون تیم فنی، یک ورک‌فلوی n8n را نگهداری و ویرایش کنیم\",\n  \"تفاوت خرید یک ابزار آماده (SaaS) با ساخت ربات اختصاصی\",\n  \"اتوماسیون گزارش‌گیری مالی روزانه بدون وارد کردن دستی اطلاعات به اکسل\",\n  \"چطور با اتوماسیون تعداد تماس‌های تلفنی پشتیبانی را کم کنیم\",\n  \"زمان مناسب برای استخدام نیرو در برابر اتوماتیک‌کردن یک فرآیند\",\n  \"اتوماسیون یادآوری پرداخت اقساط بدون پیگیری دستی هر مشتری\",\n  \"چگونه ربات تلگرام هم‌زمان چند زبان پاسخ دهد\",\n  \"قیف فروش خودکار در تلگرام: از اولین پیام تا پرداخت\",\n  \"اتوماسیون جمع‌آوری نظرات و بازخورد مشتری بعد از خرید\",\n  \"چرا اتوماسیون کسب‌وکار در ایران با کشورهای دیگر فرق دارد\",\n  \"۱۰ نشانه که ربات تلگرام کسب‌وکارتان نیاز به آپگرید دارد\",\n  \"اتوماسیون پیگیری سفارش‌های معوق و کاهش مطالبات\",\n  \"طراحی State Machine برای مکالمه ربات: چرا فقط IF کافی نیست\",\n  \"اتوماسیون هماهنگی بین چند شعبه یک کسب‌وکار با یک ربات مرکزی\",\n  \"چطور با هوش مصنوعی ایمیل و پیام‌های تکراری مشتریان را دسته‌بندی کنیم\",\n  \"مقایسه هزینه استخدام منشی تمام‌وقت با اتوماسیون پاسخ‌گویی\",\n  \"اتوماسیون ثبت و پیگیری سرنخ‌های فروش بدون از دست‌دادن هیچ مشتری\",\n  \"چرا محتوای تولیدشده با هوش مصنوعی بدون داده واقعی، اعتماد مشتری را از بین می‌برد\",\n  \"اتوماسیون ارسال فاکتور و رسید خودکار بعد از هر پرداخت\",\n  \"طراحی ربات تلگرام برای کسب‌وکارهای فصلی مثل عید و یلدا\",\n  \"اتوماسیون کنترل موجودی انبار و هشدار خودکار اتمام کالا\",\n  \"چطور با اتوماسیون، رزرو و لغو نوبت را بدون دخالت انسانی مدیریت کنیم\",\n  \"تفاوت ربات قانونی (Business API) و ربات با اکانت شخصی: کدام امن‌تر است\",\n  \"چطور دیتای مشتریان را در اتوماسیون‌ها ایمن نگه داریم\",\n  \"برنامه محتوای خودکار: از ایده تا انتشار روزانه بدون دخالت دستی\",\n  \"اتوماسیون پاسخ به سوالات متداول قبل از خرید در فروشگاه اینترنتی\",\n  \"چطور بفهمیم یک ورک‌فلوی n8n درست طراحی شده یا نه\",\n  \"اتوماسیون ثبت درخواست‌های گارانتی و پیگیری تعمیرات\",\n  \"سناروو چیست: چطور یک اپلیکیشن با تحلیل ویدیوهای وایرال ایده محتوا می‌سازد\",\n  \"اتوماسیون دعوت و یادآوری رویداد و وبینار\",\n  \"چرا شفافیت هزینه هوش مصنوعی در ابزارهای اتوماسیون مهم است\",\n  \"اتوماسیون ارتباط با تامین‌کنندگان و پیگیری سفارش خرید\",\n  \"طراحی ربات چندمرحله‌ای برای جمع‌آوری اطلاعات پیچیده مشتری\",\n  \"اتوماسیون تخصیص خودکار تیکت پشتیبانی به عضو مناسب تیم\",\n  \"چک‌لیست راه‌اندازی اولین ربات اتوماسیون کسب‌وکار در یک هفته\"\n];\n\n// به‌جای انتخاب تصادفی، هر روز دقیقاً موضوع بعدیِ تقویم را برمی‌دارد\nconst staticData = $getWorkflowStaticData('global');\nif (typeof staticData.dayIndex !== 'number') staticData.dayIndex = 0;\n\nconst topic = topics[staticData.dayIndex % topics.length];\nstaticData.dayIndex += 1;\n\nreturn [{ json: { topic } }];"
       }
@@ -30,7 +39,10 @@
       "name": "تولید مقاله با OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-240, 0],
+      "position": [
+        -240,
+        0
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://api.openai.com/v1/chat/completions",
@@ -38,7 +50,12 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "content-type", "value": "application/json" }]
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -56,9 +73,12 @@
       "name": "ساخت فایل مارک‌داون",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [0, 0],
+      "position": [
+        0,
+        0
+      ],
       "parameters": {
-        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst uniqueSlug = `${article.slug}-${today}`;\nconst esc = (s) => String(s || '').replace(/\"/g, '\\\\\"');\nconst tagsYaml = article.tags.map((t) => `\"${esc(t)}\"`).join(\", \");\n\nconst faqItems = Array.isArray(article.faq) ? article.faq : [];\nconst faqYaml = faqItems.length\n  ? `faq:\\n${faqItems.map((f) => `  - question: \"${esc(f.question)}\"\\n    answer: \"${esc(f.answer)}\"`).join('\\n')}\\n`\n  : '';\n\nconst frontmatter = `---\\ntitle: \"${esc(article.title)}\"\\ndescription: \"${esc(article.description)}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n${faqYaml}---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: uniqueSlug,\n    title: article.title,\n    path: `content/blog/${uniqueSlug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst today = new Date().toISOString().slice(0, 10);\nconst uniqueSlug = `${article.slug}-${today}`;\nconst esc = (s) => String(s || '').replace(/\"/g, '\\\\\"');\nconst tagsYaml = article.tags.map((t) => `\"${esc(t)}\"`).join(\", \");\n\nconst faqItems = Array.isArray(article.faq) ? article.faq : [];\nconst faqYaml = faqItems.length\n  ? `faq:\\n${faqItems.map((f) => `  - question: \"${esc(f.question)}\"\\n    answer: \"${esc(f.answer)}\"`).join('\\n')}\\n`\n  : '';\n\nconst frontmatter = `---\\ntitle: \"${esc(article.title)}\"\\ndescription: \"${esc(article.description)}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n${faqYaml}---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: uniqueSlug,\n    title: article.title,\n    path: `content/blog/${uniqueSlug}.md`,\n    message: `Add article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n    article,\n    today,\n    uniqueSlug,\n  },\n}];"
       }
     },
     {
@@ -66,7 +86,10 @@
       "name": "کامیت مقاله در گیت‌هاب",
       "type": "n8n-nodes-base.github",
       "typeVersion": 1,
-      "position": [240, 0],
+      "position": [
+        240,
+        0
+      ],
       "parameters": {
         "resource": "file",
         "operation": "create",
@@ -89,7 +112,10 @@
       "name": "اطلاع در تلگرام",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [480, 0],
+      "position": [
+        480,
+        0
+      ],
       "parameters": {
         "resource": "message",
         "operation": "sendMessage",
@@ -102,25 +128,200 @@
           "name": "Telegram Bot"
         }
       }
+    },
+    {
+      "id": "http-openai-en",
+      "name": "تولید نسخه انگلیسی با OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: \"gpt-4o-mini\",\n  response_format: { type: \"json_object\" },\n  messages: [\n    { role: \"system\", content: \"You are the English-language writer for IR-CLU's blog (an Iranian business-automation studio: Telegram/Bale bots, n8n workflows, AI agents). You will be given a finished Persian article as JSON (title, description, tags, faq, body_markdown). Adapt it into natural, idiomatic English for the site's /en/ section — this is NOT a literal word-for-word translation, write it the way a fluent English business-blog writer would, but do not invent any new claims, statistics, prices, or examples beyond what's in the source.\\n\\nRules:\\n- Never state a firm price in Toman or any currency beyond what the source already states. If the source is vague about cost, stay exactly that vague in English.\\n- Translate the faq array item-for-item — same number of items, same order, no additions or removals.\\n- If body_markdown contains a markdown link to one of these internal pages, rewrite it to the matching English URL below (match by the page, not literal text) and translate the link text; do not add any link that wasn't already there, and never invent a URL not in this list:\\n  /portfolio/folad-joveyn-sales-bot/ -> /en/portfolio/folad-joveyn-sales-bot/\\n  /portfolio/bale-catalog-bot/ -> /en/portfolio/bale-catalog-bot/\\n  /portfolio/product-scraper/ -> /en/portfolio/product-scraper/\\n  /automation-check/ -> /en/automation-check/\\n  /store/ -> /en/store/\\n  /#portfolio -> /en/#portfolio\\n  /#contact -> /en/#contact\\n\\nOutput strictly a single valid JSON object with this exact shape and nothing else before or after it: {\\\"title\\\": string, \\\"description\\\": string (English SEO meta description, under 160 characters), \\\"tags\\\": string[] (2-3 English tags), \\\"faq\\\": array of {question, answer}, \\\"body_markdown\\\": string (full English article body in markdown, no H1 title since the title renders separately)}\" },\n    { role: \"user\", content: JSON.stringify($('ساخت فایل مارک‌داون').item.json.article) }\n  ]\n}) }}"
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PLACEHOLDER",
+          "name": "OpenAI API Key (Authorization: Bearer)"
+        }
+      }
+    },
+    {
+      "id": "code-format-en",
+      "name": "ساخت فایل مارک‌داون انگلیسی",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.choices[0].message.content;\nconst article = JSON.parse(raw);\n\nconst base = $('ساخت فایل مارک‌داون').item.json;\nconst uniqueSlug = base.uniqueSlug;\nconst today = base.today;\n\nconst esc = (s) => String(s || '').replace(/\"/g, '\\\\\"');\nconst tagsYaml = article.tags.map((t) => `\"${esc(t)}\"`).join(\", \");\n\nconst faqItems = Array.isArray(article.faq) ? article.faq : [];\nconst faqYaml = faqItems.length\n  ? `faq:\\n${faqItems.map((f) => `  - question: \"${esc(f.question)}\"\\n    answer: \"${esc(f.answer)}\"`).join('\\n')}\\n`\n  : '';\n\nconst frontmatter = `---\\ntitle: \"${esc(article.title)}\"\\ndescription: \"${esc(article.description)}\"\\ndate: \"${today}\"\\ntags: [${tagsYaml}]\\n${faqYaml}---\\n\\n`;\n\nreturn [{\n  json: {\n    slug: uniqueSlug,\n    title: article.title,\n    path: `content/blog-en/${uniqueSlug}.md`,\n    message: `Add English article: ${article.title} (auto-generated)`,\n    fileContent: frontmatter + article.body_markdown,\n  },\n}];"
+      }
+    },
+    {
+      "id": "github-commit-en",
+      "name": "کامیت نسخه انگلیسی در گیت‌هاب",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        480,
+        200
+      ],
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "owner": "manbom",
+        "repository": "IR-CLU",
+        "filePath": "={{ $json.path }}",
+        "fileContent": "={{ $json.fileContent }}",
+        "commitMessage": "={{ $json.message }}",
+        "branch": "main"
+      },
+      "credentials": {
+        "githubApi": {
+          "id": "PLACEHOLDER",
+          "name": "GitHub account (manbom)"
+        }
+      }
+    },
+    {
+      "id": "telegram-notify-en",
+      "name": "اطلاع در تلگرام (انگلیسی)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        200
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "PLACEHOLDER_CHAT_ID",
+        "text": "=📝 English version published:\n{{ $('ساخت فایل مارک‌داون انگلیسی').item.json.title }}\n\nAfter the automatic GitHub build (~2-3 min), it'll be live at:\nhttps://irclu.com/en/blog/{{ $('ساخت فایل مارک‌داون انگلیسی').item.json.slug }}/"
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "PLACEHOLDER",
+          "name": "Telegram Bot"
+        }
+      }
     }
   ],
   "connections": {
     "هر روز ساعت ۸ صبح": {
-      "main": [[{ "node": "انتخاب موضوع", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "انتخاب موضوع",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "انتخاب موضوع": {
-      "main": [[{ "node": "تولید مقاله با OpenAI", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "تولید مقاله با OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "تولید مقاله با OpenAI": {
-      "main": [[{ "node": "ساخت فایل مارک‌داون", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "ساخت فایل مارک‌داون",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "ساخت فایل مارک‌داون": {
-      "main": [[{ "node": "کامیت مقاله در گیت‌هاب", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "کامیت مقاله در گیت‌هاب",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "تولید نسخه انگلیسی با OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "کامیت مقاله در گیت‌هاب": {
-      "main": [[{ "node": "اطلاع در تلگرام", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "اطلاع در تلگرام",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "تولید نسخه انگلیسی با OpenAI": {
+      "main": [
+        [
+          {
+            "node": "ساخت فایل مارک‌داون انگلیسی",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ساخت فایل مارک‌داون انگلیسی": {
+      "main": [
+        [
+          {
+            "node": "کامیت نسخه انگلیسی در گیت‌هاب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "کامیت نسخه انگلیسی در گیت‌هاب": {
+      "main": [
+        [
+          {
+            "node": "اطلاع در تلگرام (انگلیسی)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" }
+  "settings": {
+    "executionOrder": "v1"
+  }
 }
