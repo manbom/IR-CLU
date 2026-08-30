@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getAllPosts } from "@/lib/blog";
-import { renderMotif } from "../cover-motifs";
-import { getCoverConfig } from "../cover-config";
+import { renderMotif } from "@/components/blog/cover-motifs";
+import { getCoverConfig } from "@/components/blog/cover-config";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

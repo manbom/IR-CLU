@@ -5,7 +5,6 @@
 
 const CYAN = "#34d9e8";
 const VIOLET = "#8b5cf6";
-const EMBER = "#fb7a3c";
 
 export type Shape = {
   key: string;

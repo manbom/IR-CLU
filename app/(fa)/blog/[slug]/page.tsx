@@ -6,10 +6,13 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/blog";
 import { formatJalali } from "@/lib/format-date";
-import { BlogCover } from "../blog-cover";
+import { BlogCover } from "@/components/blog/blog-cover";
+import { dictionaries } from "@/lib/dictionaries";
+
+const t = dictionaries.fa.blog;
 
 export function generateStaticParams() {
-  return getAllPosts().map((post) => ({ slug: post.slug }));
+  return getAllPosts("fa").map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -18,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getAllPosts().find((p) => p.slug === slug);
+  const post = getAllPosts("fa").find((p) => p.slug === slug);
   if (!post) return {};
 
   return {
@@ -41,11 +44,11 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const exists = getAllPosts().some((p) => p.slug === slug);
+  const exists = getAllPosts("fa").some((p) => p.slug === slug);
   if (!exists) notFound();
 
-  const post = getPostBySlug(slug);
-  const relatedPosts = getRelatedPosts(post);
+  const post = getPostBySlug(slug, "fa");
+  const relatedPosts = getRelatedPosts(post, "fa");
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -78,11 +81,11 @@ export default async function BlogPostPage({
           className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-cyan"
         >
           <ArrowRight size={15} aria-hidden="true" />
-          بازگشت به مقالات
+          {t.backToArticles}
         </Link>
 
         <Eyebrow index="—" className="mt-8 mb-4">
-          {formatJalali(post.date)} · {post.readingTime} دقیقه مطالعه
+          {formatJalali(post.date)} · {post.readingTime} {t.readingTime}
         </Eyebrow>
 
         <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
@@ -113,7 +116,7 @@ export default async function BlogPostPage({
 
         {post.faq.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-xl font-bold text-foreground">سوالات متداول</h2>
+            <h2 className="text-xl font-bold text-foreground">{t.faqHeading}</h2>
             <div className="mt-6 flex flex-col gap-3">
               {post.faq.map((item) => (
                 <details
@@ -132,7 +135,7 @@ export default async function BlogPostPage({
 
         {relatedPosts.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-xl font-bold text-foreground">مقالات مرتبط</h2>
+            <h2 className="text-xl font-bold text-foreground">{t.relatedHeading}</h2>
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {relatedPosts.map((related) => (
                 <Link
@@ -148,15 +151,13 @@ export default async function BlogPostPage({
         )}
 
         <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
-          <p className="leading-8 text-muted">
-            می‌خواهید ببینید این موضوع دقیقاً برای کسب‌وکار شما چه شکلی می‌شود؟
-          </p>
+          <p className="leading-8 text-muted">{t.closingPrompt}</p>
           <Link
             href="/#contact"
             className="mt-4 inline-flex h-12 items-center rounded-full px-6 text-sm font-semibold text-ink"
             style={{ background: "var(--gradient-signal)" }}
           >
-            شروع گفت‌وگو
+            {t.startConversation}
           </Link>
         </div>
       </Container>

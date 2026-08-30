@@ -4,30 +4,30 @@ import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getAllPosts } from "@/lib/blog";
 import { formatJalali } from "@/lib/format-date";
-import { BlogCover } from "./blog-cover";
+import { BlogCover } from "@/components/blog/blog-cover";
+import { dictionaries } from "@/lib/dictionaries";
+
+const t = dictionaries.fa.blog;
 
 export const metadata: Metadata = {
-  title: "مقالات اتوماسیون | IR-CLU",
-  description:
-    "یادداشت‌هایی درباره اتوماسیون کسب‌وکار، ربات تلگرام، و ورک‌فلوهای n8n — با مثال‌های واقعی از پروژه‌های IR-CLU.",
+  title: t.metaTitle,
+  description: t.metaDescription,
   alternates: { canonical: "/blog/" },
 };
 
 export default function BlogIndexPage() {
-  const posts = getAllPosts();
+  const posts = getAllPosts("fa");
 
   return (
     <main className="pt-32 pb-16 md:pt-40">
       <Container>
         <Eyebrow index="—" className="mb-4">
-          مقالات
+          {t.eyebrow}
         </Eyebrow>
         <h1 className="max-w-2xl text-3xl font-bold leading-tight text-foreground md:text-5xl">
-          یادداشت‌هایی درباره اتوماسیون، ربات‌ها و کاری که واقعاً جواب می‌دهد
+          {t.heading}
         </h1>
-        <p className="mt-6 max-w-xl leading-8 text-muted">
-          هر مقاله از یک سؤال واقعی شروع می‌شود که در پروژه‌های IR-CLU با آن روبه‌رو شده‌ایم.
-        </p>
+        <p className="mt-6 max-w-xl leading-8 text-muted">{t.subtitle}</p>
 
         <div className="mt-16 grid gap-6 sm:grid-cols-2">
           {posts.map((post) => (
@@ -46,7 +46,7 @@ export default function BlogIndexPage() {
                 <div className="flex items-center gap-3 font-mono text-xs text-muted">
                   <time dir="ltr">{formatJalali(post.date)}</time>
                   <span aria-hidden="true">·</span>
-                  <span>{post.readingTime} دقیقه مطالعه</span>
+                  <span>{post.readingTime} {t.readingTime}</span>
                 </div>
                 <h2 className="mt-4 text-xl font-semibold text-foreground transition-colors group-hover:text-cyan">
                   {post.title}
