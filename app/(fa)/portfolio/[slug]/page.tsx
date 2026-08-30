@@ -5,11 +5,14 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check, ShoppingBag } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { portfolioItems } from "@/lib/portfolio";
+import { getPortfolioItems } from "@/lib/portfolio";
 import { getAllProducts } from "@/lib/products";
+import { dictionaries } from "@/lib/dictionaries";
+
+const t = dictionaries.fa.portfolioDetail;
 
 export function generateStaticParams() {
-  return portfolioItems.map((item) => ({ slug: item.slug }));
+  return getPortfolioItems("fa").map((item) => ({ slug: item.slug }));
 }
 
 export async function generateMetadata({
@@ -18,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const item = portfolioItems.find((p) => p.slug === slug);
+  const item = getPortfolioItems("fa").find((p) => p.slug === slug);
   if (!item) return {};
 
   return {
@@ -40,7 +43,7 @@ export default async function PortfolioDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const item = portfolioItems.find((p) => p.slug === slug);
+  const item = getPortfolioItems("fa").find((p) => p.slug === slug);
   if (!item) notFound();
 
   const relatedProduct = getAllProducts().find((p) => p.slug === slug);
@@ -53,11 +56,11 @@ export default async function PortfolioDetailPage({
           className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-cyan"
         >
           <ArrowRight size={15} aria-hidden="true" />
-          بازگشت به نمونه‌کارها
+          {t.back}
         </Link>
 
         <Eyebrow index="—" className="mt-8 mb-4">
-          نمونه‌کار
+          {t.eyebrow}
         </Eyebrow>
 
         <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
@@ -76,7 +79,7 @@ export default async function PortfolioDetailPage({
           />
         </div>
 
-        <h2 className="mt-12 text-xl font-bold text-foreground">این ابزار چه کاری انجام می‌دهد</h2>
+        <h2 className="mt-12 text-xl font-bold text-foreground">{t.whatItDoes}</h2>
         <ul className="mt-5 flex flex-col gap-3">
           {item.capabilities.map((point) => (
             <li key={point} className="flex items-start gap-3 leading-7 text-muted">
@@ -86,35 +89,33 @@ export default async function PortfolioDetailPage({
           ))}
         </ul>
 
-        <h2 className="mt-12 text-xl font-bold text-foreground">چطور کار می‌کند</h2>
+        <h2 className="mt-12 text-xl font-bold text-foreground">{t.howItWorks}</h2>
         <p className="mt-4 leading-8 text-muted">{item.howItWorks}</p>
 
-        <h2 className="mt-12 text-xl font-bold text-foreground">مناسب چه کسب‌وکارهایی است</h2>
+        <h2 className="mt-12 text-xl font-bold text-foreground">{t.idealFor}</h2>
         <p className="mt-4 leading-8 text-muted">{item.idealFor}</p>
 
         {relatedProduct ? (
           <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
-            <p className="leading-8 text-muted">
-              همین ابزار به‌صورت اشتراک ماهانه در فروشگاه ما آماده‌ی خرید است.
-            </p>
+            <p className="leading-8 text-muted">{t.storeCta}</p>
             <Link
               href="/store/"
               className="mt-4 inline-flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold text-ink"
               style={{ background: "var(--gradient-signal)" }}
             >
               <ShoppingBag size={16} aria-hidden="true" />
-              مشاهده در فروشگاه
+              {t.viewInStore}
             </Link>
           </div>
         ) : (
           <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
-            <p className="leading-8 text-muted">می‌خواهید چیزی شبیه این برای کسب‌وکار خودتان بسازیم؟</p>
+            <p className="leading-8 text-muted">{t.contactPrompt}</p>
             <Link
               href="/#contact"
               className="mt-4 inline-flex h-12 items-center rounded-full px-6 text-sm font-semibold text-ink"
               style={{ background: "var(--gradient-signal)" }}
             >
-              شروع گفت‌وگو
+              {t.startConversation}
             </Link>
           </div>
         )}

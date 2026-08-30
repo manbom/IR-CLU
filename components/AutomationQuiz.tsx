@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send } from "lucide-react";
-import { QUIZ_QUESTIONS, QUIZ_RESULTS, scoreQuiz } from "@/lib/automation-quiz";
+import { ArrowLeft, ArrowRight, Send } from "lucide-react";
+import { getQuizQuestions, getQuizResults, scoreQuiz } from "@/lib/automation-quiz";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 type Step = "quiz" | "result";
 type SubmitState = "idle" | "sending" | "sent" | "error";
@@ -11,6 +13,12 @@ type SubmitState = "idle" | "sending" | "sent" | "error";
 const TELEGRAM_HANDLE = "bardiaaSam";
 
 export function AutomationQuiz() {
+  const locale = useLocale();
+  const t = dictionaries[locale].quiz;
+  const QUIZ_QUESTIONS = getQuizQuestions(locale);
+  const QUIZ_RESULTS = getQuizResults(locale);
+  const BackIcon = locale === "en" ? ArrowLeft : ArrowRight;
+
   const [step, setStep] = useState<Step>("quiz");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
@@ -18,7 +26,7 @@ export function AutomationQuiz() {
   const [contact, setContact] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
 
-  const category = step === "result" ? scoreQuiz(answers) : null;
+  const category = step === "result" ? scoreQuiz(answers, locale) : null;
   const result = category ? QUIZ_RESULTS[category] : null;
 
   function selectOption(optionIndex: number) {
@@ -54,6 +62,7 @@ export function AutomationQuiz() {
           name,
           contact,
           category,
+          locale,
           answers: answers.map((optionIndex, i) => ({
             question: QUIZ_QUESTIONS[i].question,
             answer: QUIZ_QUESTIONS[i].options[optionIndex]?.label,
@@ -102,7 +111,7 @@ export function AutomationQuiz() {
                   key={option.label}
                   type="button"
                   onClick={() => selectOption(i)}
-                  className="rounded-2xl border border-border bg-ink px-6 py-4 text-right text-foreground transition-colors hover:border-cyan hover:text-cyan"
+                  className="rounded-2xl border border-border bg-ink px-6 py-4 text-start text-foreground transition-colors hover:border-cyan hover:text-cyan"
                 >
                   {option.label}
                 </button>
@@ -117,8 +126,8 @@ export function AutomationQuiz() {
             onClick={goBack}
             className="mt-8 inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-foreground"
           >
-            <ArrowLeft size={15} aria-hidden="true" />
-            سوال قبلی
+            <BackIcon size={15} aria-hidden="true" />
+            {t.previousQuestion}
           </button>
         )}
       </div>
@@ -132,7 +141,7 @@ export function AutomationQuiz() {
       transition={{ duration: 0.4 }}
       className="rounded-3xl border border-border bg-surface p-8 text-center md:p-12"
     >
-      <p className="font-mono text-xs tracking-[0.2em] text-cyan uppercase">نتیجه</p>
+      <p className="font-mono text-xs tracking-[0.2em] text-cyan uppercase">{t.resultLabel}</p>
       <h3 className="mx-auto mt-4 max-w-xl text-2xl font-bold leading-tight text-foreground md:text-3xl">
         {result?.title}
       </h3>
@@ -152,25 +161,21 @@ export function AutomationQuiz() {
 
       <div className="mx-auto mt-12 max-w-md border-t border-border pt-10">
         {submitState === "sent" ? (
-          <p className="leading-8 text-muted">
-            دریافت شد — به‌زودی از طریق تلگرام یا تماسی که دادید باهاتون در ارتباط خواهیم بود.
-          </p>
+          <p className="leading-8 text-muted">{t.sentMessage}</p>
         ) : (
           <>
-            <p className="leading-8 text-muted">
-              می‌خواهید همین نتیجه را با ما در میان بگذارید تا مستقیم پیگیری کنیم؟
-            </p>
+            <p className="leading-8 text-muted">{t.followUpPrompt}</p>
             <form onSubmit={submitLead} className="mt-6 flex flex-col gap-3">
               <input
                 type="text"
-                placeholder="اسم شما (اختیاری)"
+                placeholder={t.namePlaceholder}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-xl border border-border bg-ink px-4 py-3 text-foreground placeholder:text-muted focus:border-cyan focus:outline-none"
               />
               <input
                 type="text"
-                placeholder="شماره تماس یا آیدی تلگرام"
+                placeholder={t.contactPlaceholder}
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 className="rounded-xl border border-border bg-ink px-4 py-3 text-foreground placeholder:text-muted focus:border-cyan focus:outline-none"
@@ -182,11 +187,11 @@ export function AutomationQuiz() {
                 style={{ background: "var(--gradient-signal)" }}
               >
                 <Send size={16} aria-hidden="true" />
-                {submitState === "sending" ? "در حال ارسال..." : "ارسال و پیگیری"}
+                {submitState === "sending" ? t.sending : t.submit}
               </button>
               {submitState === "error" && (
                 <p className="text-sm text-muted">
-                  ارسال خودکار ممکن نشد — می‌توانید مستقیم در تلگرام پیام بدهید:{" "}
+                  {t.errorPrefix}{" "}
                   <a
                     href={`https://t.me/${TELEGRAM_HANDLE}`}
                     target="_blank"

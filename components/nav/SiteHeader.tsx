@@ -1,25 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Menu } from "lucide-react";
+import { Menu, Languages } from "lucide-react";
 import { Container } from "@/components/ui/Container";
-import { navItems } from "@/lib/nav-items";
+import { getNavItems } from "@/lib/nav-items";
 import { useNavState } from "@/lib/nav-state";
 import { useActiveSection } from "@/lib/use-active-section";
+import { useLocale, getAlternatePath } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 import { MobileNav } from "./MobileNav";
-
-const sectionIds = navItems
-  .filter((item) => item.href.includes("#"))
-  .map((item) => item.href.split("#")[1]);
 
 export function SiteHeader() {
   const { mobileOpen, setMobileOpen } = useNavState();
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = dictionaries[locale];
+  const navItems = useMemo(() => getNavItems(locale), [locale]);
+  const sectionIds = useMemo(
+    () => navItems.filter((item) => item.href.includes("#")).map((item) => item.href.split("#")[1]),
+    [navItems]
+  );
   const activeId = useActiveSection(sectionIds);
   const [scrolled, setScrolled] = useState(false);
+  const homeHref = locale === "en" ? "/en/#top" : "/#top";
+  const contactHref = locale === "en" ? "/en/#contact" : "/#contact";
+  const alternatePath = pathname ? getAlternatePath(pathname) : locale === "en" ? "/" : "/en/";
 
   useEffect(() => {
     function onScroll() {
@@ -38,7 +46,7 @@ export function SiteHeader() {
             scrolled ? "h-14" : "h-16"
           }`}
         >
-          <a href="/#top" className="flex items-center gap-2.5">
+          <a href={homeHref} className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="IR-CLU" width={32} height={32} className="rounded-md" />
             <span className="font-mono text-sm font-medium tracking-wide text-foreground">
               IR-CLU
@@ -73,19 +81,27 @@ export function SiteHeader() {
             })}
           </nav>
 
-          <div className="hidden md:block">
+          <div className="hidden items-center gap-3 md:flex">
             <a
-              href="/#contact"
+              href={alternatePath}
+              aria-label={locale === "en" ? "فارسی" : "English"}
+              className="flex h-9 items-center gap-1.5 rounded-full border border-border px-4 text-sm text-muted transition-colors hover:border-cyan hover:text-cyan"
+            >
+              <Languages size={14} aria-hidden="true" />
+              {locale === "en" ? "فارسی" : "EN"}
+            </a>
+            <a
+              href={contactHref}
               className="inline-flex h-9 items-center rounded-full border border-border px-5 text-sm text-foreground transition-colors hover:border-cyan hover:text-cyan"
             >
-              شروع پروژه
+              {t.nav.startProject}
             </a>
           </div>
 
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            aria-label="باز کردن منو"
+            aria-label={t.nav.openMenu}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-foreground md:hidden"
           >
             <Menu size={19} aria-hidden="true" />

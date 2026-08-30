@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
-import { navItems } from "@/lib/nav-items";
+import { X, Languages } from "lucide-react";
+import { getNavItems } from "@/lib/nav-items";
+import { useLocale, getAlternatePath } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 export function MobileNav({
   open,
@@ -13,6 +16,12 @@ export function MobileNav({
   onClose: () => void;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+  const locale = useLocale();
+  const t = dictionaries[locale];
+  const navItems = useMemo(() => getNavItems(locale), [locale]);
+  const contactHref = locale === "en" ? "/en/#contact" : "/#contact";
+  const alternatePath = pathname ? getAlternatePath(pathname) : locale === "en" ? "/" : "/en/";
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +46,7 @@ export function MobileNav({
         <motion.div
           role="dialog"
           aria-modal="true"
-          aria-label="منوی ناوبری"
+          aria-label={t.nav.navAria}
           className="fixed inset-0 z-50 flex flex-col bg-ink md:hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -46,13 +55,13 @@ export function MobileNav({
         >
           <div className="flex items-center justify-between px-6 pt-6">
             <span className="font-mono text-xs tracking-[0.2em] text-muted uppercase">
-              منو
+              {t.nav.menu}
             </span>
             <button
               ref={closeRef}
               type="button"
               onClick={onClose}
-              aria-label="بستن منو"
+              aria-label={t.nav.closeMenu}
               className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-foreground"
             >
               <X size={20} aria-hidden="true" />
@@ -75,14 +84,22 @@ export function MobileNav({
             ))}
           </nav>
 
-          <div className="px-6 pb-10">
+          <div className="flex flex-col gap-3 px-6 pb-10">
             <a
-              href="/#contact"
+              href={alternatePath}
+              onClick={onClose}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-border text-base text-foreground"
+            >
+              <Languages size={16} aria-hidden="true" />
+              {locale === "en" ? "فارسی" : "English"}
+            </a>
+            <a
+              href={contactHref}
               onClick={onClose}
               className="flex h-14 w-full items-center justify-center rounded-full text-base font-semibold text-ink"
               style={{ background: "var(--gradient-signal)" }}
             >
-              شروع پروژه
+              {t.nav.startProject}
             </a>
           </div>
         </motion.div>

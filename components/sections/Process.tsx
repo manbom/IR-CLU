@@ -4,9 +4,14 @@ import { useRef } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { processStages } from "@/lib/process-stages";
+import { getProcessStages } from "@/lib/process-stages";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 export function Process() {
+  const locale = useLocale();
+  const t = dictionaries[locale].process;
+  const processStages = getProcessStages(locale);
   const sectionRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -22,10 +27,10 @@ export function Process() {
     <section id="process" className="relative py-28 md:py-36">
       <Container>
         <Eyebrow index="—" className="mb-4">
-          فرآیند کار
+          {t.eyebrow}
         </Eyebrow>
         <h2 className="max-w-lg text-3xl font-bold leading-tight text-foreground md:text-4xl">
-          پنج مرحله، یک مسیر روشن تا اتوماسیون کامل
+          {t.heading}
         </h2>
 
         <div ref={sectionRef} className="relative mt-20 ps-10 md:ps-14">

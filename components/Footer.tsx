@@ -1,9 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
-import { navItems } from "@/lib/nav-items";
+import { getNavItems } from "@/lib/nav-items";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const locale = useLocale();
+  const t = dictionaries[locale];
+  const navItems = getNavItems(locale);
 
   return (
     <footer className="border-t border-border py-12">
@@ -12,7 +19,7 @@ export function Footer() {
           <Image src="/logo.png" alt="IR-CLU" width={28} height={28} className="rounded-md" />
           <div>
             <div className="font-mono text-sm text-foreground">IR-CLU</div>
-            <div className="text-xs text-muted">NBN Automation Solutions</div>
+            <div className="text-xs text-muted">{t.footer.tagline}</div>
           </div>
         </div>
 

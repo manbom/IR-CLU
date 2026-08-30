@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import { Send, MessageCircle, LayoutGrid, Workflow, type LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { services } from "@/lib/services";
+import { getServices } from "@/lib/services";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 const icons: Record<string, LucideIcon> = {
   send: Send,
@@ -14,14 +16,18 @@ const icons: Record<string, LucideIcon> = {
 };
 
 export function Services() {
+  const locale = useLocale();
+  const t = dictionaries[locale].services;
+  const services = getServices(locale);
+
   return (
     <section id="services" className="relative py-28 md:py-36">
       <Container>
         <Eyebrow index="—" className="mb-4">
-          خدمات
+          {t.eyebrow}
         </Eyebrow>
         <h2 className="max-w-lg text-3xl font-bold leading-tight text-foreground md:text-4xl">
-          هر چیزی که برای اتوماسیون کسب‌وکارتان لازم دارید
+          {t.heading}
         </h2>
 
         <div className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">

@@ -3,14 +3,13 @@
 import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-
-const specs = [
-  { label: "موقعیت", value: "جوین، ایران" },
-  { label: "تمرکز", value: "اتوماسیون و یکپارچه‌سازی سیستم‌ها" },
-  { label: "ابزارها", value: "n8n · Python · TypeScript · Node.js" },
-];
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 export function About() {
+  const locale = useLocale();
+  const t = dictionaries[locale].about;
+
   return (
     <section id="about" className="relative py-28 md:py-36">
       <Container className="grid gap-14 md:grid-cols-[1.1fr_0.9fr] md:gap-16">
@@ -21,25 +20,14 @@ export function About() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <Eyebrow index="—" className="mb-4">
-            درباره ما
+            {t.eyebrow}
           </Eyebrow>
           <h2 className="max-w-md text-3xl font-bold leading-tight text-foreground md:text-4xl">
-            وقتی اتوماسیون وارد کسب‌وکارتان شود، کیفیت بالا می‌رود و هزینه پایین می‌آید
+            {t.heading}
           </h2>
-          <p className="mt-6 max-w-lg leading-8 text-muted">
-            IR-CLU را برای حل یک مسئله مشخص راه انداختم: کارهایی که در کسب‌وکارها
-            هنوز با نیروی انسانی، به‌صورت تکراری و با احتمال خطا انجام می‌شوند. با
-            زبان‌ها و ابزارهای مختلف برنامه‌نویسی، این فرآیندها را به ربات، وب‌اپلیکیشن
-            یا ورک‌فلوی اتوماسیون تبدیل می‌کنم.
-          </p>
-          <p className="mt-4 max-w-lg leading-8 text-muted">
-            نتیجه‌اش ملموس است: پاسخ‌گویی سریع‌تر و بدون خطا به مشتری، کیفیت خدمات
-            بالاتر، و هزینه‌ای که به‌جای نیروی تکراری، صرف رشد واقعی کسب‌وکارتان می‌شود.
-          </p>
-          <p className="mt-4 max-w-lg leading-8 text-muted">
-            با توجه به نوع پروژه و محدودیت‌های زیرساختی داخل ایران، راه‌حلی طراحی
-            می‌کنم که بدون دردسر اجرا شود و در درازمدت پایدار بماند.
-          </p>
+          <p className="mt-6 max-w-lg leading-8 text-muted">{t.paragraph1}</p>
+          <p className="mt-4 max-w-lg leading-8 text-muted">{t.paragraph2}</p>
+          <p className="mt-4 max-w-lg leading-8 text-muted">{t.paragraph3}</p>
         </motion.div>
 
         <motion.div
@@ -53,7 +41,7 @@ export function About() {
             IR-CLU / PROFILE
           </div>
           <dl className="mt-6 flex flex-col gap-5">
-            {specs.map((spec) => (
+            {t.specs.map((spec) => (
               <div key={spec.label} className="flex flex-col gap-1 border-t border-border pt-5 first:border-t-0 first:pt-0">
                 <dt className="font-mono text-xs text-muted">{spec.label}</dt>
                 <dd className="text-foreground">{spec.value}</dd>

@@ -3,17 +3,23 @@
 import { motion } from "framer-motion";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { teamMembers } from "@/lib/team";
+import { getTeamMembers } from "@/lib/team";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 export function Team() {
+  const locale = useLocale();
+  const t = dictionaries[locale].team;
+  const teamMembers = getTeamMembers(locale);
+
   return (
     <section id="team" className="relative py-28 md:py-36">
       <Container>
         <Eyebrow index="—" className="mb-4">
-          تیم
+          {t.eyebrow}
         </Eyebrow>
         <h2 className="max-w-lg text-3xl font-bold leading-tight text-foreground md:text-4xl">
-          آدم‌هایی که پشت IR-CLU هستند
+          {t.heading}
         </h2>
 
         <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">

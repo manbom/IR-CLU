@@ -3,6 +3,7 @@ import { vazirmatn, kodeMono } from "@/lib/fonts";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { NavStateProvider } from "@/lib/nav-state";
+import { LocaleProvider } from "@/lib/locale";
 import { Analytics } from "@/components/Analytics";
 import "../globals.css";
 
@@ -28,6 +29,10 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "/",
+    languages: {
+      fa: "/",
+      en: "/en/",
+    },
   },
   openGraph: {
     type: "website",
@@ -73,10 +78,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <NavStateProvider>
-          <ScrollProgress />
-          <SmoothScroll>{children}</SmoothScroll>
-        </NavStateProvider>
+        <LocaleProvider locale="fa">
+          <NavStateProvider>
+            <ScrollProgress />
+            <SmoothScroll>{children}</SmoothScroll>
+          </NavStateProvider>
+        </LocaleProvider>
         <Analytics />
       </body>
     </html>

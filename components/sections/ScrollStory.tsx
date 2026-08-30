@@ -3,6 +3,8 @@
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ScrollSequence } from "@/components/ScrollSequence";
+import { useLocale } from "@/lib/locale";
+import { dictionaries } from "@/lib/dictionaries";
 
 const FRAME_COUNT = 55;
 
@@ -13,6 +15,9 @@ const FRAME_COUNT = 55;
  * a different clip later.
  */
 export function ScrollStory() {
+  const locale = useLocale();
+  const t = dictionaries[locale].scrollStory;
+
   return (
     <ScrollSequence
       frameCount={FRAME_COUNT}
@@ -27,7 +32,7 @@ export function ScrollStory() {
               IR-CLU
             </Eyebrow>
             <h2 className="mt-6 text-3xl font-bold leading-tight text-foreground md:text-5xl">
-              هر اسکرول، یک قدم از <span className="text-gradient-signal">خط تولید اتوماسیون</span>
+              {t.heading} <span className="text-gradient-signal">{t.headingGradient}</span>
             </h2>
           </div>
         </Container>
