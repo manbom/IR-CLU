@@ -16,32 +16,32 @@ const portfolioItemsFa: PortfolioItem[] = [
     image: "/portfolio/cphoto.png",
     title: "اپلیکیشن ویرایش خودکار عکس",
     description:
-      "اپلیکیشنی که روی دسته‌ای از عکس‌ها به‌صورت خودکار تغییرات یکسان اعمال می‌کند و خروجی نهایی را آماده تحویل برمی‌گرداند.",
+      "اپلیکیشنی مستقل (فایل EXE، بدون نیاز به نصب پایتون) که روی دسته‌ای از عکس‌ها تغییرات یکسان اعمال می‌کند — با کنترل کامل روی این‌که کدام مراحل واقعاً لازم است.",
     capabilities: [
       "پردازش دسته‌ای؛ صدها عکس در یک اجرا، بدون تکرار دستی هر مرحله",
-      "خروجی یکدست از نظر رنگ، سایز و برش، بدون نیاز به ویرایش نهایی",
-      "قابل اجرا روی یک کامپیوتر شخصی، بدون سرور یا هزینه‌ی ابری جداگانه",
+      "حذف پس‌زمینه و وسط‌چین‌کردن روی بوم سفید، هرکدام جداگانه قابل خاموش‌کردن — برای وقتی پس‌زمینه‌ی اصلی عکس تمیز است یا نیاز به اندازه‌ی طبیعی محصول است",
+      "نسخه‌ی EXE مستقل؛ روی هر ویندوزی بدون نصب پایتون یا هیچ کتابخانه‌ای اجرا می‌شود",
     ],
     howItWorks:
-      "کاربر یک پوشه از عکس‌های خام را وارد می‌کند و مجموعه‌ای از تنظیمات (یکسان‌سازی اندازه، حذف پس‌زمینه، واترمارک، کراپ مرکزی) را یک‌بار مشخص می‌کند. اپلیکیشن همان مجموعه تنظیمات را روی تک‌تک عکس‌ها اجرا می‌کند و خروجی را در یک پوشه‌ی جدید و آماده‌ی تحویل قرار می‌دهد.",
+      "کاربر یک پوشه از عکس‌های خام را وارد می‌کند و یک الگوی تنظیمات (یکسان‌سازی اندازه، حذف پس‌زمینه‌ی اختیاری، وسط‌چین‌کردن اختیاری، واترمارک، کراپ) را یک‌بار مشخص می‌کند — می‌تواند چند الگوی آماده هم ذخیره کند (مثلاً «حالت کاتالوگ» و «حالت خام»). اپلیکیشن همان تنظیمات را روی تک‌تک عکس‌ها اجرا می‌کند و خروجی را در یک پوشه‌ی جدید و آماده‌ی تحویل قرار می‌دهد.",
     idealFor:
-      "فروشگاه‌های اینترنتی و تولیدکنندگانی که هر هفته باید عکس محصولات جدید را برای کاتالوگ یا شبکه‌های اجتماعی آماده کنند.",
+      "فروشگاه‌های اینترنتی، تولیدکنندگان و مغازه‌های ساعت/زیورآلات که هر هفته باید ده‌ها تا صدها عکس محصول جدید را برای کاتالوگ یا شبکه‌های اجتماعی یکدست و آماده‌ی انتشار کنند.",
   },
   {
     slug: "content-telegram-bot",
     image: "/portfolio/content-bot.png",
     title: "ربات تلگرام تولید محتوا",
     description:
-      "نسخه‌ی ربات تلگرامی همان اپلیکیشن ویرایش عکس؛ برای تولید سریع محتوای بصری مستقیم از داخل تلگرام.",
+      "نسخه‌ی ربات تلگرامی موتور ویرایش عکس؛ برای پردازش سریع تصاویر محصول مستقیم از داخل چت، بدون نصب هیچ برنامه‌ای.",
     capabilities: [
-      "بدون نیاز به نصب چیزی؛ فقط عکس را به ربات بفرستید",
-      "خروجی در چند ثانیه، آماده انتشار",
-      "قابل اتصال به کانال یا گروه تیم محتوا",
+      "پذیرش عکس به‌صورت فشرده، فایل با کیفیت کامل، یا یک فایل ZIP حاوی چند عکس هم‌زمان",
+      "پردازش هم‌زمان چند کاربر، با صف جداگانه برای هرکدام تا کارها قاطی نشوند",
+      "دستورهای ساده برای تنظیم اندازه و نام خروجی، بدون نیاز به هیچ پنل جداگانه",
     ],
     howItWorks:
-      "همان موتور پردازش تصویر اپلیکیشن دسکتاپ، این‌بار پشت یک ربات تلگرام. عکس خام را در چت ارسال می‌کنید، ربات همان تنظیمات از پیش تعریف‌شده را اعمال می‌کند و عکس نهایی را در همان مکالمه برمی‌گرداند.",
+      "همان موتور پردازش تصویر اپلیکیشن دسکتاپ (دوربری، یکسان‌سازی اندازه، بوم سفید، کراپ، واترمارک)، این‌بار پشت یک ربات تلگرام با دستورهای /start، /panel، /sizes، /name، /process، /new. عکس یا فایل ZIP را در چت می‌فرستید، ربات با همان تنظیمات پردازش می‌کند و خروجی را در همان مکالمه برمی‌گرداند.",
     idealFor:
-      "تیم‌های محتوایی که سرعت انتشار برایشان مهم‌تر از باز کردن یک نرم‌افزار جداگانه است.",
+      "تیم‌های محتوایی که سرعت انتشار برایشان مهم‌تر از باز کردن یک نرم‌افزار جداگانه است؛ کسانی که از موبایل یا مستقیم از تلگرام می‌خواهند عکس محصول را آماده کنند.",
   },
   {
     slug: "folad-joveyn-sales-bot",
@@ -164,32 +164,32 @@ const portfolioItemsEn: PortfolioItem[] = [
     image: "/portfolio/cphoto.png",
     title: "Automatic Photo Editing App",
     description:
-      "An app that applies the same set of edits to a whole batch of photos automatically and hands back delivery-ready output.",
+      "A standalone app (a single EXE, no Python install needed) that applies the same edits to a whole batch of photos — with full control over which steps actually apply.",
     capabilities: [
       "Batch processing — hundreds of photos in one run, no repeating each step by hand",
-      "Consistent output across color, size, and crop, with no final touch-up needed",
-      "Runs on a regular personal computer, no server or extra cloud cost",
+      "Background removal and centering-on-white-canvas can each be toggled off independently — for when the original background is already clean or the product needs its natural size",
+      "Standalone EXE build; runs on any Windows machine with no Python or library install",
     ],
     howItWorks:
-      "The user imports a folder of raw photos and defines a set of edits once (resizing, background removal, watermark, center crop). The app applies that exact same edit set to every photo and drops the results into a new, delivery-ready folder.",
+      "The user imports a folder of raw photos and defines a preset once (resizing, optional background removal, optional centering, watermark, crop) — and can save several presets (e.g. a \"catalog\" mode and a \"raw\" mode). The app applies that exact preset to every photo and drops the results into a new, delivery-ready folder.",
     idealFor:
-      "Online stores and manufacturers who need fresh product photos ready for a catalog or social media every week.",
+      "Online stores, manufacturers, and watch/jewelry shops that need dozens to hundreds of fresh product photos ready for a catalog or social media every week.",
   },
   {
     slug: "content-telegram-bot",
     image: "/portfolio/content-bot.png",
     title: "Telegram Content Bot",
     description:
-      "A Telegram-bot version of the same photo-editing app, for fast visual content straight from a chat.",
+      "A Telegram-bot version of the photo-editing engine, for fast product-image processing straight from a chat, no app to install.",
     capabilities: [
-      "Nothing to install — just send the photo to the bot",
-      "Output in seconds, ready to publish",
-      "Can be connected to a content team's channel or group",
+      "Accepts a compressed photo, a full-quality file, or a ZIP with several photos at once",
+      "Processes multiple users concurrently, each with its own queue so jobs never get mixed up",
+      "Simple commands for size and output-name presets, no separate panel needed",
     ],
     howItWorks:
-      "The same image-processing engine as the desktop app, this time behind a Telegram bot. Send a raw photo in the chat, the bot applies the same predefined settings, and returns the finished photo in the same conversation.",
+      "The same image-processing engine as the desktop app (background removal, resizing, white canvas, crop, watermark), this time behind a Telegram bot with /start, /panel, /sizes, /name, /process, /new commands. Send a photo or a ZIP in the chat, the bot processes it with the same settings, and returns the result in the same conversation.",
     idealFor:
-      "Content teams for whom publishing speed matters more than opening a separate piece of software.",
+      "Content teams for whom publishing speed matters more than opening a separate piece of software; anyone who wants to prep a product photo straight from their phone or Telegram.",
   },
   {
     slug: "folad-joveyn-sales-bot",
