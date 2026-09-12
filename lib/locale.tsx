@@ -30,5 +30,12 @@ export function getAlternatePath(pathname: string): string {
     return `${targetPrefix}/blog/`;
   }
 
+  // Case studies aren't guaranteed to exist under the same slug in both locales
+  // either (translated as they're written, same as blog posts) — fall back to
+  // the resume index rather than risk linking to a page that doesn't exist yet.
+  if (/^\/work\/[^/]+\/?$/.test(bare)) {
+    return `${targetPrefix}/resume/`;
+  }
+
   return bare === "/" ? `${targetPrefix}/` : `${targetPrefix}${bare}`;
 }

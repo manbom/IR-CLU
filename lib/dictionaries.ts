@@ -53,6 +53,10 @@ const fa = {
     heading: "قسمتی از پروژه‌های تیم IR-CLU",
     subtitle: "روی هر پروژه بزنید تا ببینید دقیقاً چطور کار می‌کند.",
     viewDetails: "جزئیات بیشتر",
+    resumeCard: {
+      title: "رزومه‌ی من",
+      subtitle: "مهارت‌ها و کیس‌استادی کامل چند پروژه — از مسئله تا سختی واقعی کار",
+    },
   },
   portfolioDetail: {
     back: "بازگشت به نمونه‌کارها",
@@ -63,6 +67,66 @@ const fa = {
     storeCta: "همین ابزار به‌صورت اشتراک ماهانه در فروشگاه ما آماده‌ی خرید است.",
     viewInStore: "مشاهده در فروشگاه",
     contactPrompt: "می‌خواهید چیزی شبیه این برای کسب‌وکار خودتان بسازیم؟",
+    startConversation: "شروع گفت‌وگو",
+  },
+  resume: {
+    eyebrow: "رزومه",
+    metaTitle: "رزومه — بردیا سام | IR-CLU",
+    metaDescription:
+      "رزومه‌ی فنی بردیا سام: طراحی و ساخت ربات‌های پیام‌رسان، ایجنت‌های هوش مصنوعی و ورک‌فلوهای اتوماسیون — با کیس‌استادی کامل هر پروژه.",
+    contactCta: "تماس در تلگرام",
+    viewAllPortfolio: "مشاهده‌ی همه‌ی نمونه‌کارها",
+    skillsHeading: "مهارت‌ها",
+    skillGroups: [
+      {
+        label: "اتوماسیون و ارکستریشن",
+        items: ["n8n", "ورک‌فلوهای رویدادمحور", "Webhook", "APScheduler"],
+      },
+      {
+        label: "هوش مصنوعی",
+        items: ["OpenAI GPT", "Whisper", "طراحی پرامپت", "بازیابی دانش (RAG)"],
+      },
+      {
+        label: "بک‌اند و دیتابیس",
+        items: ["PostgreSQL / Supabase", "SQLite", "Node.js", "Docker"],
+      },
+      {
+        label: "ربات‌های پیام‌رسان",
+        items: ["Telegram Bot API", "Bale Bot API", "طراحی State Machine مکالمه"],
+      },
+      {
+        label: "فرانت‌اند و وب",
+        items: ["Next.js / React", "TypeScript", "Tailwind CSS"],
+      },
+      {
+        label: "دسکتاپ و پردازش رسانه",
+        items: ["Python", "PySide6 / Qt", "FFmpeg", "PyInstaller"],
+      },
+    ],
+    caseStudiesHeading: "کیس‌استادی‌های منتخب",
+    caseStudiesSubtitle:
+      "نگاهی عمیق‌تر به چند پروژه — مسئله، راه‌حل، و سختی واقعی کاری که پشت هرکدام بوده.",
+    fullCaseStudyLabel: "کیس‌استادی کامل",
+    closingPrompt: "دنبال کسی برای ساخت پروژه‌ی بعدی‌تان هستید؟",
+    startConversation: "شروع گفت‌وگو",
+  },
+  work: {
+    metaSuffix: "کیس‌استادی",
+    backToResume: "بازگشت به رزومه",
+    eyebrow: "کیس‌استادی",
+    statusLive: "زنده و در حال استفاده",
+    statusDelivered: "تحویل‌شده",
+    statusInProgress: "در حال توسعه",
+    statusArchived: "بایگانی‌شده",
+    problemLabel: "مسئله",
+    solutionLabel: "راه‌حل",
+    outcomeLabel: "نتیجه",
+    featuresHeading: "آنچه ساخته شد",
+    challengesHeading: "سختی واقعی کار",
+    decisionsHeading: "تصمیم‌های مهندسی",
+    technicalFactsHeading: "جزئیات فنی",
+    stackHeading: "ابزار",
+    closingPrompt: "می‌خواهید ببینید این سطح از کار دقیقاً برای کسب‌وکار شما چه شکلی می‌شود؟",
     startConversation: "شروع گفت‌وگو",
   },
   quizTeaser: {
@@ -183,6 +247,10 @@ const en: Dictionary = {
     heading: "Some of the IR-CLU team's projects",
     subtitle: "Click any project to see exactly how it works.",
     viewDetails: "View details",
+    resumeCard: {
+      title: "My Resume",
+      subtitle: "Skills and a full case study for a few projects — from the problem to the real difficulty",
+    },
   },
   portfolioDetail: {
     back: "Back to portfolio",
@@ -193,6 +261,66 @@ const en: Dictionary = {
     storeCta: "This exact tool is available as a monthly subscription in our store.",
     viewInStore: "View in store",
     contactPrompt: "Want us to build something like this for your business?",
+    startConversation: "Start a conversation",
+  },
+  resume: {
+    eyebrow: "Resume",
+    metaTitle: "Resume — Bardia Sam | IR-CLU",
+    metaDescription:
+      "Bardia Sam's technical resume: designing and building messaging bots, AI agents, and automation workflows — with a full case study for each project.",
+    contactCta: "Message on Telegram",
+    viewAllPortfolio: "View the full portfolio",
+    skillsHeading: "Skills",
+    skillGroups: [
+      {
+        label: "Automation & Orchestration",
+        items: ["n8n", "Event-driven workflows", "Webhooks", "APScheduler"],
+      },
+      {
+        label: "AI",
+        items: ["OpenAI GPT", "Whisper", "Prompt design", "Knowledge retrieval (RAG)"],
+      },
+      {
+        label: "Backend & Databases",
+        items: ["PostgreSQL / Supabase", "SQLite", "Node.js", "Docker"],
+      },
+      {
+        label: "Messaging Bots",
+        items: ["Telegram Bot API", "Bale Bot API", "Conversation state-machine design"],
+      },
+      {
+        label: "Frontend & Web",
+        items: ["Next.js / React", "TypeScript", "Tailwind CSS"],
+      },
+      {
+        label: "Desktop & Media Processing",
+        items: ["Python", "PySide6 / Qt", "FFmpeg", "PyInstaller"],
+      },
+    ],
+    caseStudiesHeading: "Selected case studies",
+    caseStudiesSubtitle:
+      "A deeper look at a few projects — the problem, the solution, and the real difficulty behind each one.",
+    fullCaseStudyLabel: "Full case study",
+    closingPrompt: "Looking for someone to build your next project?",
+    startConversation: "Start a conversation",
+  },
+  work: {
+    metaSuffix: "Case Study",
+    backToResume: "Back to resume",
+    eyebrow: "Case study",
+    statusLive: "Live and in use",
+    statusDelivered: "Delivered",
+    statusInProgress: "In development",
+    statusArchived: "Archived",
+    problemLabel: "Problem",
+    solutionLabel: "Solution",
+    outcomeLabel: "Outcome",
+    featuresHeading: "What was built",
+    challengesHeading: "The real difficulty",
+    decisionsHeading: "Engineering decisions",
+    technicalFactsHeading: "Technical details",
+    stackHeading: "Stack",
+    closingPrompt: "Want to see exactly what this level of work looks like for your business?",
     startConversation: "Start a conversation",
   },
   quizTeaser: {

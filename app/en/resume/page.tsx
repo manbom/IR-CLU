@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getAllCaseStudies } from "@/lib/case-studies";
 import { getTeamMembers } from "@/lib/team";
 import { dictionaries } from "@/lib/dictionaries";
 
-const t = dictionaries.fa.resume;
+const t = dictionaries.en.resume;
 
 export const metadata: Metadata = {
   title: t.metaTitle,
   description: t.metaDescription,
-  alternates: { canonical: "/resume/" },
+  alternates: { canonical: "/en/resume/" },
 };
 
-export default function ResumePage() {
-  const [me] = getTeamMembers("fa");
-  const caseStudies = getAllCaseStudies("fa");
+export default function EnglishResumePage() {
+  const [me] = getTeamMembers("en");
+  const caseStudies = getAllCaseStudies("en");
 
   return (
     <main className="pt-32 pb-24 md:pt-40">
@@ -42,7 +42,7 @@ export default function ResumePage() {
             {t.contactCta}
           </a>
           <Link
-            href="/#portfolio"
+            href="/en/#portfolio"
             className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm text-muted transition-colors hover:border-cyan hover:text-cyan"
           >
             {t.viewAllPortfolio}
@@ -82,7 +82,7 @@ export default function ResumePage() {
               {caseStudies.map((cs) => (
                 <Link
                   key={cs.slug}
-                  href={`/work/${cs.slug}/`}
+                  href={`/en/work/${cs.slug}/`}
                   className="group block rounded-xl border border-border bg-surface p-6 transition-colors hover:border-cyan/50"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
@@ -94,7 +94,7 @@ export default function ResumePage() {
                     </div>
                     <span className="inline-flex shrink-0 items-center gap-1.5 font-mono text-[11px] text-cyan opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       {t.fullCaseStudyLabel}
-                      <ArrowLeft size={12} aria-hidden="true" />
+                      <ArrowRight size={12} aria-hidden="true" />
                     </span>
                   </div>
                   {cs.headlineMetrics.length > 0 && (
@@ -121,7 +121,7 @@ export default function ResumePage() {
         <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
           <p className="leading-8 text-muted">{t.closingPrompt}</p>
           <Link
-            href="/#contact"
+            href="/en/#contact"
             className="mt-4 inline-flex h-12 items-center rounded-full px-6 text-sm font-semibold text-ink"
             style={{ background: "var(--gradient-signal)" }}
           >

@@ -90,8 +90,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
-    ...getAllCaseStudies().map((cs) => ({
+    {
+      url: `${SITE_URL}/en/resume/`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    ...getAllCaseStudies("fa").map((cs) => ({
       url: `${SITE_URL}/work/${cs.slug}/`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    })),
+    ...getAllCaseStudies("en").map((cs) => ({
+      url: `${SITE_URL}/en/work/${cs.slug}/`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5,

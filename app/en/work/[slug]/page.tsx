@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getAllCaseStudies, getCaseStudyBySlug } from "@/lib/case-studies";
 import { dictionaries } from "@/lib/dictionaries";
 
-const t = dictionaries.fa.work;
+const t = dictionaries.en.work;
 
 export function generateStaticParams() {
-  return getAllCaseStudies("fa").map((cs) => ({ slug: cs.slug }));
+  return getAllCaseStudies("en").map((cs) => ({ slug: cs.slug }));
 }
 
 export async function generateMetadata({
@@ -19,18 +19,18 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const cs = getCaseStudyBySlug(slug, "fa");
+  const cs = getCaseStudyBySlug(slug, "en");
   if (!cs) return {};
 
   return {
     title: `${cs.title} | ${t.metaSuffix} | IR-CLU`,
     description: cs.tagline,
-    alternates: { canonical: `/work/${slug}/` },
+    alternates: { canonical: `/en/work/${slug}/` },
     openGraph: {
       title: cs.title,
       description: cs.tagline,
       type: "article",
-      url: `/work/${slug}/`,
+      url: `/en/work/${slug}/`,
     },
   };
 }
@@ -42,13 +42,13 @@ const statusLabel: Record<string, string> = {
   archived: t.statusArchived,
 };
 
-export default async function CaseStudyPage({
+export default async function EnglishCaseStudyPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const cs = getCaseStudyBySlug(slug, "fa");
+  const cs = getCaseStudyBySlug(slug, "en");
   if (!cs) notFound();
 
   const chips = [cs.client, cs.role, cs.duration, cs.year ? `${cs.year}` : null].filter(
@@ -59,10 +59,10 @@ export default async function CaseStudyPage({
     <main className="pt-32 pb-24 md:pt-40">
       <Container className="max-w-3xl">
         <Link
-          href="/resume/"
+          href="/en/resume/"
           className="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-cyan"
         >
-          <ArrowRight size={15} aria-hidden="true" />
+          <ArrowLeft size={15} aria-hidden="true" />
           {t.backToResume}
         </Link>
 
@@ -90,7 +90,7 @@ export default async function CaseStudyPage({
 
         {/* Headline metrics */}
         {cs.headlineMetrics.length > 0 && (
-          <div className="mt-10 grid grid-cols-1 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface sm:grid-cols-3 sm:divide-y-0 sm:divide-x sm:divide-x-reverse">
+          <div className="mt-10 grid grid-cols-1 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
             {cs.headlineMetrics.map((m) => (
               <div key={m.label} className="p-6 text-center">
                 <div
@@ -230,7 +230,7 @@ export default async function CaseStudyPage({
         <div className="mt-16 rounded-2xl border border-border bg-surface p-8 text-center">
           <p className="leading-8 text-muted">{t.closingPrompt}</p>
           <Link
-            href="/#contact"
+            href="/en/#contact"
             className="mt-4 inline-flex h-12 items-center rounded-full px-6 text-sm font-semibold text-ink"
             style={{ background: "var(--gradient-signal)" }}
           >

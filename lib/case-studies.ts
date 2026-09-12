@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { marked } from "marked";
+import type { Locale } from "./locale";
 
 export type HeadlineMetric = { value: string; label: string; note?: string };
 export type Feature = { title: string; detail: string };
@@ -38,9 +39,13 @@ export type CaseStudyMeta = {
 
 export type CaseStudy = CaseStudyMeta & { html: string };
 
-const DIR = path.join(process.cwd(), "content/portfolio");
+const DIR: Record<Locale, string> = {
+  fa: path.join(process.cwd(), "content/portfolio"),
+  en: path.join(process.cwd(), "content/portfolio-en"),
+};
 
-// content/portfolio/ may be empty — that's a normal state, not an error.
+// content/portfolio-en/ may be empty until a case study is translated — that's a
+// normal state, not an error (mirrors the content/blog vs content/blog-en pattern).
 function listMarkdownFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
@@ -75,18 +80,20 @@ function toMeta(data: any, slug: string): CaseStudyMeta {
   };
 }
 
-export function getAllCaseStudies(): CaseStudyMeta[] {
-  const files = listMarkdownFiles(DIR);
+export function getAllCaseStudies(locale: Locale = "fa"): CaseStudyMeta[] {
+  const dir = DIR[locale];
+  const files = listMarkdownFiles(dir);
   const items = files.map((filename) => {
-    const raw = fs.readFileSync(path.join(DIR, filename), "utf8");
+    const raw = fs.readFileSync(path.join(dir, filename), "utf8");
     const { data } = matter(raw);
     return toMeta(data, filename.replace(/\.md$/, ""));
   });
   return items.sort((a, b) => a.order - b.order);
 }
 
-export function getCaseStudyBySlug(slug: string): CaseStudy | null {
-  const file = path.join(DIR, `${slug}.md`);
+export function getCaseStudyBySlug(slug: string, locale: Locale = "fa"): CaseStudy | null {
+  const dir = DIR[locale];
+  const file = path.join(dir, `${slug}.md`);
   if (!fs.existsSync(file)) return null;
   const raw = fs.readFileSync(file, "utf8");
   const { data, content } = matter(raw);
