@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { getPortfolioItems } from "@/lib/portfolio";
+import { getAllCaseStudies } from "@/lib/case-studies";
 
 export const dynamic = "force-static";
 
@@ -82,6 +83,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.6,
+    })),
+    {
+      url: `${SITE_URL}/resume/`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    ...getAllCaseStudies().map((cs) => ({
+      url: `${SITE_URL}/work/${cs.slug}/`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
     })),
   ];
 }

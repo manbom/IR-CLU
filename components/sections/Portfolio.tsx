@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getPortfolioItems } from "@/lib/portfolio";
@@ -66,6 +66,32 @@ export function Portfolio() {
             </motion.div>
           ))}
         </div>
+
+        {locale === "fa" && (
+          <Link
+            href="/resume/"
+            className="group mt-6 flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/40 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan/50"
+          >
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border text-cyan">
+                <FileText size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground transition-colors group-hover:text-cyan">
+                  رزومه‌ی من
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  مهارت‌ها و کیس‌استادی کامل چند پروژه — از مسئله تا سختی واقعی کار
+                </p>
+              </div>
+            </div>
+            <ArrowLeft
+              size={16}
+              className="shrink-0 text-cyan opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              aria-hidden="true"
+            />
+          </Link>
+        )}
       </Container>
     </section>
   );
