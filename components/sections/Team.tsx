@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Container } from "@/components/ui/Container";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { getTeamMembers } from "@/lib/team";
@@ -32,12 +33,24 @@ export function Team() {
               transition={{ duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
               className="rounded-2xl border border-border bg-surface p-8"
             >
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-ink"
-                style={{ background: "var(--gradient-signal)" }}
-              >
-                {member.initials}
-              </div>
+              {member.photo ? (
+                <div className="relative h-16 w-16 overflow-hidden rounded-full border border-border">
+                  <Image
+                    src={member.photo}
+                    alt={member.name}
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold text-ink"
+                  style={{ background: "var(--gradient-signal)" }}
+                >
+                  {member.initials}
+                </div>
+              )}
               <h3 className="mt-6 text-lg font-bold text-foreground">{member.name}</h3>
               <p className="mt-1 text-sm text-cyan">{member.role}</p>
               <p className="mt-4 leading-7 text-muted">{member.bio}</p>

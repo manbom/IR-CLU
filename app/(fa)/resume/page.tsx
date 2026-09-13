@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Send } from "lucide-react";
 import { Container } from "@/components/ui/Container";
@@ -25,9 +26,16 @@ export default function ResumePage() {
         <Eyebrow index="—" className="mb-4">
           {t.eyebrow}
         </Eyebrow>
-        <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
-          {me.name}
-        </h1>
+        <div className="flex items-center gap-5">
+          {me.photo && (
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border border-border">
+              <Image src={me.photo} alt={me.name} fill sizes="80px" className="object-cover" />
+            </div>
+          )}
+          <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl">
+            {me.name}
+          </h1>
+        </div>
         <p className="mt-3 text-lg text-cyan">{me.role}</p>
         <p className="mt-6 max-w-xl leading-8 text-muted">{me.bio}</p>
 

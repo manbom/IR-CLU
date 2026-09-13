@@ -5,6 +5,7 @@ export type TeamMember = {
   role: string;
   bio: string;
   initials: string;
+  photo?: string;
 };
 
 const teamFa: TeamMember[] = [
@@ -13,6 +14,7 @@ const teamFa: TeamMember[] = [
     role: "مدیر پروژه‌ها و سازنده‌ی ایجنت‌ها و فلوهای مارکتینگ",
     bio: "۶ سال سابقه‌ی فعالیت در حوزه‌ی برنامه‌نویسی؛ طراحی و ساخت ربات‌ها، ایجنت‌های هوش مصنوعی و ورک‌فلوهای اتوماسیون IR-CLU را از ابتدا تا اجرا بر عهده دارد.",
     initials: "ب.س",
+    photo: "/team/bardia-sam.webp",
   },
 ];
 
@@ -22,6 +24,7 @@ const teamEn: TeamMember[] = [
     role: "Project lead and builder of IR-CLU's agents and marketing flows",
     bio: "6 years of programming experience; owns the design and build of IR-CLU's bots, AI agents, and automation workflows end to end.",
     initials: "BS",
+    photo: "/team/bardia-sam.webp",
   },
 ];
 
